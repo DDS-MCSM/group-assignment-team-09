@@ -4,8 +4,8 @@ Group Assignment base repository for the Data Driven Security subject of the [Cy
 
 ## Project Title
 
-Brief description of the project. 
-Top 3 CVE con CPE (shodan r interface) ---
+Titulo por definir
+
 
 ### Requirements
 
@@ -15,7 +15,12 @@ Top 3 CVE con CPE (shodan r interface) ---
   
 ### Project Description
 
-Description of the project. 
+Del paquete net.security tomaremos los CVEs filtrando por los siguientes valores:
+
+- cvss > 8
+- Año: 2018
+
+De los resultados tomaremos CPE y haremos una correlación con los resultados optenidos en Shodan.
 
 ### Goals
 
