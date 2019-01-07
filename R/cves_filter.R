@@ -10,26 +10,17 @@ if (!suppressMessages(suppressWarnings(require("net.security", quietly = T)))) {
 }
 library("net.security")
 
+if (!suppressMessages(suppressWarnings(require("stringr", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("stringr")))
+}
 library("stringr")
 
 #Filter Parameters:
-year <- "2018"
-id_filter <- paste("CVE", year, sep="-")  # CVE-<year>
-score_filter <- 8.0
+myfilters <- list(year = "2018",
+                  id = "CVE-2018",  # CVE-<year>
+                  score = 9.0)
 
-######
-#net.security::DataSetUpdate(samples = FALSE, use.remote = FALSE)
-#filtered_cves <- GetDataFrame("cves")
-#
-## Eliminar filas con "RESERVED" en la descripción
-#filtered_cves <- filtered_cves[!str_detect(filtered_cves$description, "RESERVED"),]
-#
-## Filtra los resultados buscando solo los cves del año 2018
-#filtered_cves <- filtered_cves[!str_detect(filtered_cves$cve, year),]
-#
-## Filtra cvss > 8
-#filtered_cves <- filtered_cves[filtered_cves$cvss > 8,]
-#######
+
 
 # Retrive latest datasets from github repository
 destfile <-  tempfile(fileext = ".rda")
@@ -40,14 +31,32 @@ filtered_cves <- netsec.data$datasets$cves
 
 
 # Filtra por año
-filtered_cves <- filtered_cves[str_detect(filtered_cves$cve.id, id_filter),]
+filtered_cves <- filtered_cves[str_detect(filtered_cves$cve.id, myfilters$id),]
 
 ## Eliminar filas con "RESERVED" en la descripción
 #filtered_cves <- filtered_cves[!str_detect(filtered_cves$description, "RESERVED"),]
 
-# Filtra CVSS > 8
-filtered_cves <- filtered_cves[(filtered_cves$cvss3.score > score_filter & !is.na(filtered_cves$cvss3.score)),]
+# Filtra CVSS > 9
+filtered_cves <- filtered_cves[(filtered_cves$cvss3.score > myfilters$score & !is.na(filtered_cves$cvss3.score)),]
 
+
+# Extraer porduct information: CPE from filtered_cves$vulnerable.configuration
+
+df_cpes <- fromJSON(filtered_cves$vulnerable.configuration[1])
+
+
+filtered_cves$affects[1]
+
+library(jsonlite)
+
+fromJSON(filtered_cves$affects)
+
+fromJSON(paste0('[',toString(head(filtered_cves$affects)),']'))
+fromJSON(paste0('[',toString(filtered_cves$affects),']'))
+
+
+cbind(filtered_cves[,c("vendor_name","product_data")],fromJSON(paste0('[',toString(filtered_cves$affects),']')))
+cbind(filtered_cves, fromJSON(paste0('[',toString(filtered_cves$affects),']')))
 
 ## Muestra datos
 
@@ -56,12 +65,26 @@ filtered_cves <- filtered_cves[(filtered_cves$cvss3.score > score_filter & !is.n
 # Grafica por tipo de acceso
 #filtered_cves$cvs2.av
 # Grafica por CPE
-
 # Severity vs Access Type
 
+# Muestra la Lista de CVEs por fecha de publicación
 par(mfrow = c(3, 1), mar = c(4, 4, 2, 1))
 hist(x = as.Date.POSIXlt(filtered_cves$published.date), col = "blue", breaks = "month", format = "%d %b %Y", freq = T, main = "CVE publication", xlab = "Publication date")
 
+
+library(ggplot2)
+
+filtered_cves$affects
+
+ggplot(data.frame(filtered_cves), aes(x=filtered_cves$affects,fill=factor(filtered_cves$cvss2.av)))  +
+  geom_bar() +
+  coord_flip() +
+  xlab("xlab") +
+  ggtitle("title") +
+  theme(
+    legend.title=element_blank(),
+    legend.position=c(.90,.1)
+  )
 
 
 
