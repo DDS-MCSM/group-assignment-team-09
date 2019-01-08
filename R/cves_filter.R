@@ -1,6 +1,15 @@
-#
-# Team 09: CVE Parser
-#
+#******************************************************************************#
+#                                                                              #
+#                   Team 9 - Data Driven Security                              #
+#                                                                              #
+#                Juan Jose Sanz Martin - Alberto López Millán                  #
+#                                                                              #
+#******************************************************************************#
+
+##
+## CVE PARSER
+##
+
 # Select CVEs appling year and score filters
 #
 
@@ -21,23 +30,58 @@ myfilters <- list(year = "2018",
                   score = 9.0)
 
 
+### Retrive latest datasets from github repository: net-security
 
-# Retrive latest datasets from github repository
-destfile <-  tempfile(fileext = ".rda")
-netsec <- download.file(url = "https://github.com/r-net-tools/security.datasets/raw/master/net.security/sysdata.rda",
-                        destfile = destfile)
-load(destfile)
-filtered_cves <- netsec.data$datasets$cves
+RetrieveCVEs <- function(){
+
+  destfile <-  tempfile(fileext = ".rda")
+  netsec <- download.file(url = "https://github.com/r-net-tools/security.datasets/raw/master/net.security/sysdata.rda",
+                          destfile = destfile)
+  load(destfile)
+  df_cves <- netsec.data$datasets$cves
+
+  return(df_cves)
+}
+
+### Filter CVEs by year
+
+FilterCVEsByYear <- function(df, year){
+
+  cve_id_filter = paste0("CVE-", year)    # CVE-<year>
+
+  # Filtra por año
+  filtered_cves <- df[str_detect(df$cve.id, cve_id_filter),]
+
+  return(filtered_cves)
+}
 
 
-# Filtra por año
-filtered_cves <- filtered_cves[str_detect(filtered_cves$cve.id, myfilters$id),]
+### Filter CVEs by Score
+
+FilterCVEsByScore <- function(df, score_filter){
+
+
+  # Filtra CVSS > score_filter  (default >= 8 )
+  filtered_cves <- df[(df$cvss3.score > score_filter & !is.na(df$cvss3.score)),]
+
+
+  return(filtered_cves)
+}
+
+
+
+
+
+
+
+test <- function(){
+
+
+
 
 ## Eliminar filas con "RESERVED" en la descripción
 #filtered_cves <- filtered_cves[!str_detect(filtered_cves$description, "RESERVED"),]
 
-# Filtra CVSS > 9
-filtered_cves <- filtered_cves[(filtered_cves$cvss3.score > myfilters$score & !is.na(filtered_cves$cvss3.score)),]
 
 
 # Extraer porduct information: CPE from filtered_cves$vulnerable.configuration
@@ -141,6 +185,8 @@ ggplotly(p)
 
 
 
+
+}
 
 
 

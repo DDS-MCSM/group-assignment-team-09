@@ -1,39 +1,116 @@
-install.packages("devtools")
-install.packages("ggplot2")
-install.packages("xtable")
-install.packages("maps")
-install.packages("rworldmap")
-install.packages("ggthemes")
-devtools::install_github("hrbrmstr/shodan")
+#******************************************************************************#
+#                                                                              #
+#                   Team 9 - Data Driven Security                              #
+#                                                                              #
+#                Juan Jose Sanz Martin - Alberto López Millán                  #
+#                                                                              #
+#******************************************************************************#
 
+##
+## SHODAN.IO FUNCTIONS
+##
+
+# Install Dependencies, if needed: devtools
+if (!suppressMessages(suppressWarnings(require("devtools", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("devtools", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+library(devtools)
+
+# Install Dependencies, if needed: shodan   ---    R Shodan Lib: https://github.com/hrbrmstr/shodan
+if (!suppressMessages(suppressWarnings(require("shodan", quietly = T)))) {
+  suppressMessages(suppressWarnings(devtools::install_github("hrbrmstr/shodan")))
+}
 library(shodan)
-library(plyr)  # ddply
+
+# Install Dependencies, if needed: ggplot2
+if (!suppressMessages(suppressWarnings(require("ggplot2", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("ggplot2", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
 library(ggplot2)
-library(xtable)
-library(maps)
-library(rworldmap)
+
+# Install Dependencies, if needed: ggthemes
+if (!suppressMessages(suppressWarnings(require("ggthemes", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("ggthemes", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
 library(ggthemes)
 
+# Install Dependencies, if needed: rworldmap
+if (!suppressMessages(suppressWarnings(require("rworldmap", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("rworldmap", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+library(rworldmap)
 
 
+### Add Shodan Key
 
-# R Shodan Lib: https://github.com/hrbrmstr/shodan
+AddShodanKey <- function() {
+  # Check Shodan Key: it should be stored in .Renviron file
+  if ( !file.exists("~/.Renviron") ) {
+    warning("Shodan Key not set")
+    #shodan_key<-readline(prompt="Provide Shodan Key: " )
+    cat("Please Add Key ... \nSHODAN_API_KEY = \"<key>\"")
+    usethis::edit_r_environ()
+  }
 
-# Check Shodan Key: it should be stored in .Renviron file
-if ( !file.exists("~/.Renviron") ) {
-  warning("Shodan Key not set")
-  #shodan_key<-readline(prompt="Provide Shodan Key: " )
-  cat("Please Add Key ... \nSHODAN_API_KEY = \"<key>\"")
-  usethis::edit_r_environ()
+  if ( ! nchar(Sys.getenv("SHODAN_API_KEY")) > 1 ) {
+    warning("SHODAN_API_KEY not found")
+    cat("Please Add Key ... ")
+    usethis::edit_r_environ()
+  }
+
+  # To see Shodan Key run: Sys.getenv("SHODAN_API_KEY")
 }
 
-if ( ! nchar(Sys.getenv("SHODAN_API_KEY")) > 1 ) {
-  warning("SHODAN_API_KEY not found")
-  cat("Please Add Key ... ")
-  usethis::edit_r_environ()
+
+
+### Obtener informacion de Shodan de un Producto y Version
+
+GetShodanResults <- function(vendor, product, version){
+
+  #vendor="juniper"
+  #product="junos"
+  #version="14.1x53"
+
+  # Set query
+  result <- shodan_search(query=paste(vendor,product,version,sep = "+"))
+  df = result$matches
+
+  return(df)
 }
 
-# To see Shodan Key run: Sys.getenv("SHODAN_API_KEY")
+
+### Representar informacion de Shodan en Mapa
+
+PlotMapShodanResults <- function(df){
+
+  world = map_data("world")
+  (ggplot() +
+      geom_polygon(data=world, aes(x=long, y=lat, group=group)) +
+      geom_point(data=df, aes(x=df$location$longitude, y=df$location$latitude), colour="#EE760033",size=1.75) +
+      labs(x="",y="") +
+      theme_few())
+
+}
+
+
+
+
+
+
+
+
+
+
+
+install.packages("xtable")
+install.packages("maps")
+library(plyr)  # ddply
+library(xtable)
+library(maps)
+
+
+
+
 
 
 vendor="juniper"
@@ -49,12 +126,7 @@ df = result$matches
 #
 # --> https://rud.is/b/2013/01/17/shodan-api-in-r-with-examples/
 
-world = map_data("world")
-(ggplot() +
-    geom_polygon(data=world, aes(x=long, y=lat, group=group)) +
-    geom_point(data=df, aes(x=df$location$longitude, y=df$location$latitude), colour="#EE760033",size=1.75) +
-    labs(x="",y="") +
-    theme_few())
+
 
 
 

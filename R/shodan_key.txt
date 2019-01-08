@@ -1,0 +1,5 @@
+Shodan Key Configuration:  Store API keys in the .Renviron file.
+
+.Renviron
+
+SHODAN_API_KEY = "xxxx"

@@ -1,6 +1,8 @@
 ---
-title: "Vignette Title"
-author: "Vignette Author"
+title: "Vignette Title: Team 09"
+author: 
+- name: "Juan José Sanz Martín"
+- name: "Alberto López Millán"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -8,6 +10,58 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Obtener CVEs
+
+Importar las funciones para crear el data frame de CVEs `./R/cves_filter.R`.
+
+```{r file_load_cves, error=TRUE}
+source("../R/cves_filter.R")
+```
+
+### 1.1 Obtención de los CVEs
+
+CVEs Data Frame de https://github.com/r-net-tools/security.datasets/raw/master/net.security/sysdata.rda
+
+```{r df_cves, include=TRUE}
+year <- "2018"
+score <- 9
+cves_full <- RetrieveCVEs()
+cves <- FilterCVEsByYear(cves_full, year)
+cves <- FilterCVEsByScore(cves, score)
+```
+
+
+
+
+
+## Importar funciones de Shodan.io
+
+Importar las funciones de Shodan.io `../R/shodan.R`.
+
+```{r file_load_shodan, error=TRUE}
+source("../R/shodan.R")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
