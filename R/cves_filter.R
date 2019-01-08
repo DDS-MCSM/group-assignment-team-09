@@ -42,12 +42,41 @@ filtered_cves <- filtered_cves[(filtered_cves$cvss3.score > myfilters$score & !i
 
 # Extraer porduct information: CPE from filtered_cves$vulnerable.configuration
 
-df_cpes <- fromJSON(filtered_cves$vulnerable.configuration[1])
-
-
-filtered_cves$affects[1]
-
 library(jsonlite)
+
+#df_cpes <- ""
+#fromJSON(filtered_cves$vulnerable.configuration[1])
+#list_cpes <- ""
+#fromJSON(toString(head(filtered_cves$vulnerable.configuration)))
+#
+#filtered_cves$vulnerable.configuration[1]
+#extract(list_cpes[3], '([^/]+)/.*', remove=FALSE)
+#gsub('.*\'(cpe.*)\'',list_cpes[2])
+#gsub("^.*(cpe)","", toString(list_cpes[2]))
+#stringr::str_extract(string = filtered_cves$vulnerable.configuration[1], pattern = ".*\"(cpe:.*)\".*")
+
+#filtered_cves$affects[1]
+# ----------------------------
+
+cpes <- fromJSON(filtered_cves$vulnerable.configuration[1])
+cpes <- fromJSON(toString(filtered_cves$vulnerable.configuration[1]))
+# cpes[['cpe_match']][['vulnerable']]
+# cpes[['cpe_match']][['cpe23Uri']]
+cpes$operator   # OR ? AND ?
+cpes_match <- cpes$cpe_match
+str_detect(cpes_match, "TRUE")
+grep("TRUE", cpes_match, value = TRUE)
+#regexpr("(cpe:2.3:.*)", cpes_match)
+str_match(cpes_match, "cpe:2.3:o:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\\\",")
+
+
+
+
+
+
+# cpe:2.3:o:juniper:junos:14.1:r1:*:*:*:*:*:*
+# o:<vendor>:<product>:<version>:<release>
+
 
 fromJSON(filtered_cves$affects)
 

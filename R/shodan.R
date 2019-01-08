@@ -7,6 +7,7 @@ install.packages("ggthemes")
 devtools::install_github("hrbrmstr/shodan")
 
 library(shodan)
+library(plyr)  # ddply
 library(ggplot2)
 library(xtable)
 library(maps)
@@ -35,14 +36,75 @@ if ( ! nchar(Sys.getenv("SHODAN_API_KEY")) > 1 ) {
 # To see Shodan Key run: Sys.getenv("SHODAN_API_KEY")
 
 
+vendor="juniper"
+product="junos"
+version="14.1x53"
 
 # Set query
-result <- shodan_search(query="SMB", facets = NULL, page = 1, minify = TRUE)
+result <- shodan_search(query=paste(vendor,product,version,sep = "+"))
+df = result$matches
 
-# Aggregate by OS
-df <- result$matches
-df.summary.by.os <- ddply(df, .(os), summarise, N=length(.os))
+###############################################################################
+#################################################################################
+#
+# --> https://rud.is/b/2013/01/17/shodan-api-in-r-with-examples/
 
+world = map_data("world")
+(ggplot() +
+    geom_polygon(data=world, aes(x=long, y=lat, group=group)) +
+    geom_point(data=df, aes(x=df$location$longitude, y=df$location$latitude), colour="#EE760033",size=1.75) +
+    labs(x="",y="") +
+    theme_few())
+
+
+
+##################
+##################
+##################
+
+#(facets = NULL, page = 1, minify = TRUE)
+#find the first 100 found memcached instances
+#result = SHODANQuery(query='port:11211',limit=100,trace=TRUE)
+
+
+# aggregate result by operating system
+# you can use this one if you want to filter out NA's completely
+#df.summary.by.os = ddply(df, .(os), summarise, N=sum(as.numeric(factor(os))))
+#this one provides count of NA's (i.e. unidentified systems)
+df.summary.by.os = ddply(df, .(df$os), summarise, N=length(df$os))
+
+# sort & see the results in a text table
+df.summary.by.os = transform(df.summary.by.os, os = reorder(os, -N))
+df.summary.by.os
+# plot a bar chart of them
+(ggplot(df.summary.by.os,aes(x=os,y=N,fill=os)) +
+    geom_bar(stat="identity") +
+    theme_few() +
+    labs(y="Count",title="SHODAN Search Results by OS"))
+
+
+
+
+
+
+
+###############################################################################
+#################################################################################
+#
+# --> https://rud.is/b/2013/01/17/shodan-api-in-r-with-examples/
+
+# sort & view the results by country
+# see above if you don't want to filter out NA's
+df.summary.by.country_code = ddply(df, .(df$location$country_code, df$location$country_name), summarise, N=sum(!is.na(df$location$country_code)))
+df.summary.by.country_code = transform(df.summary.by.country_code, country_code = reorder(df$location$country_code, -N))
+
+df.summary.by.country_code
+
+# except make a choropleth
+# using the very simple rworldmap process
+shodanChoropleth = joinCountryData2Map( df.summary.by.country_code, joinCode = "ISO2", nameJoinColumn = "country_code")
+par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+mapCountryData(shodanChoropleth, nameColumnToPlot="N",colourPalette="terrain",catMethod="fixedWidth")
 
 ###############################################################################
 #################################################################################
