@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Importar las funciones para crear el data frame de CVEs `./R/cves_filter.R`.
 
 ```{r file_load_cves, error=TRUE}
-source("../R/cves_filter.R")
+source("../R/cves.R")
 ```
 
 ### 1.1 Obtención de los CVEs
