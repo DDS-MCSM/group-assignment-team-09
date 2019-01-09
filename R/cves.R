@@ -13,21 +13,33 @@
 # Select CVEs appling year and score filters
 #
 
-# Install Dependencies, if needed
+# Install Dependencies, if needed: net.security
 if (!suppressMessages(suppressWarnings(require("net.security", quietly = T)))) {
   suppressMessages(suppressWarnings(install.packages("net.security")))
 }
 library("net.security")
 
+# Install Dependencies, if needed: stringr
 if (!suppressMessages(suppressWarnings(require("stringr", quietly = T)))) {
   suppressMessages(suppressWarnings(install.packages("stringr")))
 }
 library("stringr")
 
-#Filter Parameters:
-myfilters <- list(year = "2018",
-                  id = "CVE-2018",  # CVE-<year>
-                  score = 9.0)
+
+# Install Dependencies, if needed: jsonlite
+if (!suppressMessages(suppressWarnings(require("jsonlite", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("jsonlite")))
+}
+library("jsonlite")
+
+
+# Install Dependencies, if needed: ggplot2
+if (!suppressMessages(suppressWarnings(require("ggplot2", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("ggplot2")))
+}
+library("ggplot2")
+
+
 
 
 ### Retrive latest datasets from github repository: net-security
@@ -45,12 +57,28 @@ RetrieveCVEs <- function(){
 
 ### Filter CVEs by year
 
-FilterCVEsByYear <- function(df, year){
+FilterCVEsByYear <- function(df, year_filter){
 
-  cve_id_filter = paste0("CVE-", year)    # CVE-<year>
+  cve_id_filter = paste0("CVE-", year_filter)    # CVE-<year>
 
   # Filtra por año
   filtered_cves <- df[str_detect(df$cve.id, cve_id_filter),]
+
+  ## Remove NAs
+  #filtered_cves <- filtered_cves[!(is.na(filtered_cves$cve.id)),]
+
+  return(filtered_cves)
+}
+
+### Filter CVEs by Access Vector
+FilterCVEsByAccessVectorNetwork <- function(df){
+
+  av_filter_exact <- "^NETWORK$"
+  # Filtra por Acces Vector
+  filtered_cves <- df[str_detect(df$cvss3.av, av_filter_exact),]
+
+  ## Remove NAs
+  #filtered_cves <- filtered_cves[!(is.na(filtered_cves$cvss3.av)),]
 
   return(filtered_cves)
 }
@@ -62,31 +90,147 @@ FilterCVEsByScore <- function(df, score_filter){
 
 
   # Filtra CVSS > score_filter  (default >= 8 )
-  filtered_cves <- df[(df$cvss3.score > score_filter & !is.na(df$cvss3.score)),]
+  filtered_cves <- df[(df$cvss3.score >= score_filter),]
 
+  ## Remove NAs
+  #filtered_cves <- filtered_cves[!(is.na(filtered_cves$cvss3.score)),]
 
   return(filtered_cves)
 }
 
+### Filter NA Values in important columns
+FilterNAs <- function(df){
+
+  # Elimina los items que contengan NAs en las siguientes columnas
+  # df$cvss3.av
+  # df$cvss3.score
+  # df$vulnerable.configuration
+  df <- df[!(is.na(df$cve.id)) | !(is.na(df$cvss3.av)) | !(is.na(df$cvss3.score)) | !(is.na(df$vulnerable.configuration)),]
+
+  return(df)
+}
+
+
+PlotCVEsByPublishedDate <- function(df) {
+
+  # Muestra la Lista de CVEs por fecha de publicación
+  par(mfrow = c(3, 1), mar = c(4, 4, 2, 1))
+  hist(x = as.Date.POSIXlt(df$published.date), col = "blue", breaks = "month", format = "%d %b %Y", freq = T, main = "CVE publication", xlab = "Publication date")
+
+}
+
+PlotPieChartCVEsByScore <- function(df) {
+
+  plot_data <- as.data.frame(table(cves$cvss3.score))
+  colnames(plot_data) <- c('score', 'count')
+
+  ggplot(plot_data, aes(x='',y=count, fill=as.factor(score))) +
+    geom_bar(stat="identity", width=1) +
+    coord_polar("y", start=0) +
+    labs(fill="Score") +
+    ggtitle("CVEs por score") +
+    theme(
+      #legend.title=element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.ticks.y = element_blank()
+    )
+
+  # Muestra CVEs por Score
+  #ggplot(df, aes(x="", y=cvss3.score, fill=factor(cvss3.score))) +
+  #  geom_bar(stat="identity", width=1) +
+  #  coord_polar("y", start=0) +
+  #  labs(fill="Score") +
+  #  ggtitle("CVEs por score") +
+  #  theme(
+  #    #legend.title=element_blank(),
+  #    axis.title.x = element_blank(),
+  #    axis.title.y = element_blank(),
+  #    axis.text.x = element_blank(),
+  #    axis.text.y = element_blank(),
+  #    axis.ticks.x = element_blank(),
+  #    axis.ticks.y = element_blank()
+  #  )
+
+}
+
+ExtractCPE <- function(cve_df){
+
+  # Extract product information: CPE from cves$vulnerable.configuration
+
+  # CVEs ID + CPEs and create a data frame
+  cve_id_col <- cve_df[ , +which(names(cve_df) %in% c("cve.id"))]
+  cpe_column <- lapply(cve_df$vulnerable.configuration, jsonlite::fromJSON)
+  colsparsed <- str_match( cpe_column, "cpe:2.3:([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\".*")
+                                       #cpe:2.3:o      :belkin :wemo_insight_smart_plug_firmware:-:*:*:*:*:*:*:*, FALSE, cpe:2.3:h:belkin:wemo_insight_smart_plug:-:*:*:*:*:*:*:*
+
+  cpe_df <-  as.data.frame(cbind(cve_id_col,cpe_column,colsparsed))
+
+
+  colnames(cpe_df) <- c('cve.id', 'vulnerable.configuration', 'cpe23Uri','tipo', 'vendor', 'product', 'version')
 
 
 
+  return(cpe_df)
+
+}
 
 
 
 test <- function(){
 
+  cpe_df$cpe_column
 
 
 
-## Eliminar filas con "RESERVED" en la descripción
-#filtered_cves <- filtered_cves[!str_detect(filtered_cves$description, "RESERVED"),]
+
+
+  cve_id_col <- cves_score_10[ , +which(names(cves_score_10) %in% c("cve.id"))]
+  cpe_column <- lapply(cves_score_10$vulnerable.configuration, jsonlite::fromJSON)
+  cpe_df <- as.data.frame(cbind(cve_id_col,cpe_column))
+
+
+  remove(cpes)
+  cpes <- data.frame(operator=character(), cpe_match=character(), vulnerable=character(), cpe23Uri=character())
+
+
+  for(i in 1:nrow(cves_score_10)){
+    cpes[i,] <- NA
+    #print(paste(i,"-", cves_score_10$vulnerable.configuration[i]))
+    cpe_tmp <- fromJSON(cves_score_10$vulnerable.configuration[i])
+    cpe_tmp$operator
+    cpe_tmp$cpe_match
+
+    cpes[i,]$operator
+    cpes[i,]$operator <- paste0("[", toString(cpe_tmp$operator) ,"]")   # OR ? AND ?
+
+    tmp <- str_match(cpe_tmp$cpe_match, "cpe:2.3:o:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\\\",")
+
+    #print(paste(i, tmp))
+    cpes[i,]$cpe_match <- toString(tmp)
+
+    unlist(fromJSON(cves_score_10$vulnerable.configuration[1]),recursive = TRUE, use.names = TRUE)
+    cves$vulnerable.configuration <- unlist(lapply(cve.entries$configurations$nodes, jsonlite::toJSON))
+
+    test <- lapply(cves_score_10$vulnerable.configuration, jsonlite::fromJSON)
+    test2 <- lapply(test, as.data.frame)
+    test[21]
+
+    list(test[1])
+
+    test2 <- unlist(test,recursive = TRUE,use.names = TRUE)
+
+    cves_score_10$vulnerable.configuration[21]
+
+    df <- data.frame(matrix(unlist(test), nrow=length(test), byrow=T))
 
 
 
-# Extraer porduct information: CPE from filtered_cves$vulnerable.configuration
+  }
 
-library(jsonlite)
 
 #df_cpes <- ""
 #fromJSON(filtered_cves$vulnerable.configuration[1])
@@ -102,8 +246,8 @@ library(jsonlite)
 #filtered_cves$affects[1]
 # ----------------------------
 
-cpes <- fromJSON(filtered_cves$vulnerable.configuration[1])
-cpes <- fromJSON(toString(filtered_cves$vulnerable.configuration[1]))
+cpes <- fromJSON(cves$vulnerable.configuration[1])
+cpes <- fromJSON(toString(cves$vulnerable.configuration[1]))
 # cpes[['cpe_match']][['vulnerable']]
 # cpes[['cpe_match']][['cpe23Uri']]
 cpes$operator   # OR ? AND ?
@@ -111,7 +255,7 @@ cpes_match <- cpes$cpe_match
 str_detect(cpes_match, "TRUE")
 grep("TRUE", cpes_match, value = TRUE)
 #regexpr("(cpe:2.3:.*)", cpes_match)
-str_match(cpes_match, "cpe:2.3:o:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\\\",")
+str_match( cpes_score_10$vulnerable.configuration, "cpe:2.3:o:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\\\",")
 
 
 
@@ -140,9 +284,6 @@ cbind(filtered_cves, fromJSON(paste0('[',toString(filtered_cves$affects),']')))
 # Grafica por CPE
 # Severity vs Access Type
 
-# Muestra la Lista de CVEs por fecha de publicación
-par(mfrow = c(3, 1), mar = c(4, 4, 2, 1))
-hist(x = as.Date.POSIXlt(filtered_cves$published.date), col = "blue", breaks = "month", format = "%d %b %Y", freq = T, main = "CVE publication", xlab = "Publication date")
 
 
 library(ggplot2)

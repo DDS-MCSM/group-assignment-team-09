@@ -9,6 +9,9 @@ vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+params:
+  filter_year: "2018"
+  filter_score: 8
 ---
 
 ```{r setup, include=FALSE}
@@ -28,17 +31,51 @@ source("../R/cves.R")
 
 CVEs Data Frame de https://github.com/r-net-tools/security.datasets/raw/master/net.security/sysdata.rda
 
+Filtros:
+
+- Access Vector: Network
+- Score >= 8
+- Year == 2018
+
+
 ```{r df_cves, include=TRUE}
-year <- "2018"
-score <- 9
 cves_full <- RetrieveCVEs()
-cves <- FilterCVEsByYear(cves_full, year)
-cves <- FilterCVEsByScore(cves, score)
+cves <- FilterCVEsByYear(cves_full, params$filter_year)
+cves <- FilterCVEsByAccessVectorNetwork(cves)
+cves <- FilterCVEsByScore(cves, params$filter_score)
+cves_score_10 <- FilterCVEsByScore(cves, 10) 
+
+cves <- FilterNAs(cves)
+
+# unique(cves[,"cvss3.av"])
+# unique(cves$cvss3.av)
+```
+
+### 1.x Graficas de CVEs
+
+CVEs filtrados y representados por fecha de publicación y clasificados por su score.
+
+```{r df_cves_plot, include=TRUE}
+
+PlotCVEsByPublishedDate(cves)
+
 ```
 
 
+```{r df_cves_score_plot, include=TRUE}
 
+PlotPieChartCVEsByScore(cves)
 
+```
+
+## Obtener CPEs
+
+Formato usado para las llamadas a Shodan vendor+product+version
+
+```{r cpe_functions, error=TRUE}
+cpes <- ExtractCPE(cves)
+cpes_score_10 <- ExtractCPE(cves_score_10)
+```
 
 ## Importar funciones de Shodan.io
 
@@ -48,8 +85,25 @@ Importar las funciones de Shodan.io `../R/shodan.R`.
 source("../R/shodan.R")
 ```
 
+### Busqueda en Shodan
 
 
+```{r shodan_search, include=TRUE}
+
+# Shodan Search
+
+
+```
+
+
+### Representación de los datos de Shodan
+
+
+```{r shodan_plot, include=TRUE}
+
+# Shodan plot
+
+```
 
 
 
