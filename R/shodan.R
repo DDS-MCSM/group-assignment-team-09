@@ -99,7 +99,7 @@ PlotMapShodanResults <- function(df){
 
 
 
-
+other <- function() {
 
 
 install.packages("xtable")
@@ -200,5 +200,5 @@ df.summary.by.os = ddply(df, .(os), summarise, N=length(os))
 df.summary.by.os = transform(df.summary.by.os, os = reorder(os, -N))
 df.summary.by.os
 
-
+}
 

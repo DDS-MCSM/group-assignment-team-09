@@ -164,13 +164,26 @@ ExtractCPE <- function(cve_df){
   # CVEs ID + CPEs and create a data frame
   cve_id_col <- cve_df[ , +which(names(cve_df) %in% c("cve.id"))]
   cpe_column <- lapply(cve_df$vulnerable.configuration, jsonlite::fromJSON)
-  colsparsed <- str_match( cpe_column, "cpe:2.3:([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\".*")
-                                       #cpe:2.3:o      :belkin :wemo_insight_smart_plug_firmware:-:*:*:*:*:*:*:*, FALSE, cpe:2.3:h:belkin:wemo_insight_smart_plug:-:*:*:*:*:*:*:*
 
-  cpe_df <-  as.data.frame(cbind(cve_id_col,cpe_column,colsparsed))
+  # CPE      cpe:2.3:part:vendor:product:version:update:edition:lang:sw_edition:target_sw:target_hw:other
+  # Official CPE schema specify this regex: cpe:2.3:aho*-{5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\*\-]))(:(((\?*|\*?)([a-zA-Z0-9\-\._]|(\\[\\\*\?!"#$$%&'\(\)\+,/:;<=>@\[\]\^{\|}~]))+(\?*|*?))|[*-])){4}
+  # El siguiente RegEx, es el oficial de CPE añadiendo un "escape" \ adicional para que funcione en R
+  #             cpe:2.3:aho*-{5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\*\-]))(:(((\?*|\*?)([a-zA-Z0-9\-\._]|(\\[\\\*\?!"#$$%&'\(\)\+,/:;<=>@\[\]\^{\|}~]))+(\?*|*?))|[*-])){4}
+  cpe_regex <- "cpe:2.3:aho*-{5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\\*\\-]))(:(((\\?*|\\*?)([a-zA-Z0-9\\-\\._]|(\\\\[\\\\\\*\\?!"#$$%&'\\(\\)\\+,/:;<=>@\\[\\]\\^{\\|}~]))+(\\?*|*?))|[*-])){4}"
+  #cpe_regex <- "(cpe:[a-zA-Z0-9:_-.*]+)"   # RegEx "cpe:" + Alphanum + : + : + underscore (_) + *
+  #cpe_regex <- "(cpe:[0-9](\.[0-9]+)?:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+"
+  #cpe_regex <- "cpe:2.3:([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\".*"
+  #colsparsed <- str_match( cpe_column, cpe_regex)
+  cpes_parsed <- str_match_all( cpe_column, pattern = cpe_regex)
+
+  # List of Unique CPEs:
+  #unlist(cpes_parsed) %>% unique
+  #lapply(cpes_parsed, unique)
+
+  cpe_df <-  as.data.frame(cbind(cve_id_col,cpe_column,cpes_parsed))
 
 
-  colnames(cpe_df) <- c('cve.id', 'vulnerable.configuration', 'cpe23Uri','tipo', 'vendor', 'product', 'version')
+  #colnames(cpe_df) <- c('cve.id', 'vulnerable.configuration', 'cpe23Uri','tipo', 'vendor', 'product', 'version')
 
 
 
