@@ -169,31 +169,44 @@ ExtractCPE <- function(cve_df){
   # Official CPE schema specify this regex: cpe:2.3:aho*-{5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\*\-]))(:(((\?*|\*?)([a-zA-Z0-9\-\._]|(\\[\\\*\?!"#$$%&'\(\)\+,/:;<=>@\[\]\^{\|}~]))+(\?*|*?))|[*-])){4}
   # El siguiente RegEx, es el oficial de CPE añadiendo un "escape" \ adicional para que funcione en R
   #             cpe:2.3:aho*-{5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\*\-]))(:(((\?*|\*?)([a-zA-Z0-9\-\._]|(\\[\\\*\?!"#$$%&'\(\)\+,/:;<=>@\[\]\^{\|}~]))+(\?*|*?))|[*-])){4}
-  cpe_regex <- "cpe:2.3:aho*-{5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\\*\\-]))(:(((\\?*|\\*?)([a-zA-Z0-9\\-\\._]|(\\\\[\\\\\\*\\?!"#$$%&'\\(\\)\\+,/:;<=>@\\[\\]\\^{\\|}~]))+(\\?*|*?))|[*-])){4}"
+  #cpe_regex <- "cpe:2.3:aho*-{5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\\*\\-]))(:(((\\?*|\\*?)([a-zA-Z0-9\\-\\._]|(\\\\[\\\\\\*\\?!"#$$%&'\\(\\)\\+,/:;<=>@\\[\\]\\^{\\|}~]))+(\\?*|*?))|[*-])){4}"
   #cpe_regex <- "(cpe:[a-zA-Z0-9:_-.*]+)"   # RegEx "cpe:" + Alphanum + : + : + underscore (_) + *
   #cpe_regex <- "(cpe:[0-9](\.[0-9]+)?:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+"
-  #cpe_regex <- "cpe:2.3:([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\".*"
-  #colsparsed <- str_match( cpe_column, cpe_regex)
-  cpes_parsed <- str_match_all( cpe_column, pattern = cpe_regex)
+  #cpe_regex <- "cpe:2.3:([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\""
+  cpe_regex <- "cpe:([0-9]\\.[0-9]+?):([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):"
+  cpes_parsed <- str_match( cpe_column, cpe_regex)
+  #cpes_parsed <- str_match( cpe_column, pattern = cpe_regex)
 
   # List of Unique CPEs:
   #unlist(cpes_parsed) %>% unique
   #lapply(cpes_parsed, unique)
 
+
   cpe_df <-  as.data.frame(cbind(cve_id_col,cpe_column,cpes_parsed))
 
 
-  #colnames(cpe_df) <- c('cve.id', 'vulnerable.configuration', 'cpe23Uri','tipo', 'vendor', 'product', 'version')
-
-
+  colnames(cpe_df) <- c('cve.id', 'vulnerable.configuration', 'cpe23Uri','CPE_version', 'Part_Component', 'Vendor_Component', 'Product_Component', 'Version_Component', 'Edition_Component', 'Language_Component', 'Abbreviations')
 
   return(cpe_df)
 
 }
 
+FilterCPEsByPartComponent <- function(df, regex) {
+
+  # Filtra CPES PArt Component with regex expresion
+  filtered_cpes <- df[str_detect(df$Part_Component, regex),]
+
+  return(filtered_cpes)
+}
+
+####################################################
+####################################################
+#### TESTs y pruebas a integrar en funciones
 
 
 test <- function(){
+
+
 
   cpe_df$cpe_column
 

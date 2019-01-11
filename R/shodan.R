@@ -97,6 +97,9 @@ PlotMapShodanResults <- function(df){
 
 
 
+####################################################
+####################################################
+#### TESTs y pruebas a integrar en funciones
 
 
 other <- function() {

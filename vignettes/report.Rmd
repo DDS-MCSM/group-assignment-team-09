@@ -43,9 +43,13 @@ cves_full <- RetrieveCVEs()
 cves <- FilterCVEsByYear(cves_full, params$filter_year)
 cves <- FilterCVEsByAccessVectorNetwork(cves)
 cves <- FilterCVEsByScore(cves, params$filter_score)
+
+# Remove Rows containing NAs in important columns
+cves <- FilterNAs(cves)
+
+# Create a df containing only CVEs with scope 10
 cves_score_10 <- FilterCVEsByScore(cves, 10) 
 
-cves <- FilterNAs(cves)
 
 # unique(cves[,"cvss3.av"])
 # unique(cves$cvss3.av)
@@ -91,6 +95,9 @@ cpes_score_10 <- ExtractCPE(cves_score_10)
 
 # Filtra: CPE part: 
 # filtra según el tag "part component"  h = hardware part|o = operating system part|a = application part
+cpes_part_regex <- "h|o|a"
+cpes <- FilterCPEsByPartComponent(cpes, cpes_part_regex)
+cpes_score_10 <- FilterCPEsByPartComponent(cpes_score_10, cpes_part_regex)
 
 ```
 
@@ -108,6 +115,9 @@ source("../R/shodan.R")
 
 
 ```{r shodan_search, include=TRUE}
+
+#cpes_score_10
+#cpes
 
 vendor="juniper"
 product="junos"
