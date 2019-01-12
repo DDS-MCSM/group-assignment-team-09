@@ -70,6 +70,8 @@ CPE_Create_Shodan_Query_Column <- function(df) {
 
   # Filter Query Text: Remove "*"
   df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "\\*")
+  df$ShodanQuery <- stringr::str_replace_all(df$ShodanQuery, "_", "+")  # treat undescore  as an space
+  df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "+-")   # Remove problematic fields
   #df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "+\$")
 
   return(df)
@@ -118,7 +120,7 @@ CPE_Shodan_Search <- function(df){
     Sys.sleep(0.01)
 
     # Debug results
-    suppressMessages(suppressWarnings( cat(df$shodan_results[i]) ))
+    suppressMessages(suppressWarnings( print(df$shodan_results[i]) ))
   }
 
 

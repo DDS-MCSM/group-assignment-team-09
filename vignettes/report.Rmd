@@ -1,5 +1,5 @@
 ---
-title: "Vignette Title: Team 09"
+title: "Práctica Team 09: Busqueda en Shodan de Vulnerabilidades del año pasado"
 author: 
 - name: "Juan José Sanz Martín"
 - name: "Alberto López Millán"
@@ -17,6 +17,10 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+## Introducción
+
+### La Pregunta
 
 
 ## Obtener CVEs
