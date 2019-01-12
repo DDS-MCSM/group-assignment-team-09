@@ -22,6 +22,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### La Pregunta
 
+## Configurar Token de R Shodan
+
+Ejecutando el codigo incluido se abrira el fichero .Renviron
+En ese archivo hay que almacenar el token con formato: SHODAN_API_KEY = "<token>" y reiniciar R Studio
+
+```{r rshodan_token, include=FALSE}
+usethis::edit_r_environ()
+```
+
 
 ## Obtener CVEs
 
@@ -157,6 +166,7 @@ if(!exists("shodan_cpe_results_score_10", inherits = FALSE)) {
 ```{r shodan_plot, include=TRUE}
 
 # Shodan plot
+PlotMapShodanResults(shodan_cpe_results_score_10$shodan_results[18])
 PlotMapShodanResults(shodan_res)
 
 ```

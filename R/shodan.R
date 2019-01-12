@@ -71,8 +71,11 @@ CPE_Create_Shodan_Query_Column <- function(df) {
   # Filter Query Text: Remove "*"
   df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "\\*")
   df$ShodanQuery <- stringr::str_replace_all(df$ShodanQuery, "_", "+")  # treat undescore  as an space
-  df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "+-")   # Remove problematic fields
-  #df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "+\$")
+  #df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "\+-")   # Remove problematic fields
+  #df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "+$")
+  # Remove problematic fields:
+  df$ShodanQuery  <- gsub("+$","" , df$ShodanQuery ,ignore.case = TRUE)
+  df$ShodanQuery  <- gsub("+-$","" , df$ShodanQuery ,ignore.case = TRUE)
 
   return(df)
 }
@@ -90,38 +93,55 @@ GetShodanResults <- function(query_text){
 
   print(paste("Num of results: ", result$total))
 
-  if (result$total > 0) {
-    df_res <- result$matches
-  }
-  else {
-    df_res <- data.frame()
-  }
+  #if (result$total > 0) {
+  #  df_res <- result$matches
+  #}
+  #else {
+  #  df_res <- NA
+  #}
 
 
-  return(df_res)
+  return(result)
 }
 
 CPE_Shodan_Search <- function(df){
 
-  # Following code would generate a lot of Rqst agaist Shodan
-  # we'll try instead using a for loop with a sleep
-  #df$shodan_results <- lapply(df$ShodanQuery, GetShodanResults)
+  df$shodan_result <- list(nrow(df))
+  #df$shodan_total <- matrix(integer(0),nrow = nrow(df))
+  #df$shodan_matches <- list(nrow(df))
 
-  df$shodan_results <- matrix(data.frame(), nrow = nrow(df), ncol = 1)
 
 
   for(i in 1:nrow(df)) {
     # Debug
     print(paste("Query:", i, df$ShodanQuery[i]))
 
-    df$shodan_results[i] <- GetShodanResults(df$ShodanQuery[i])
+    #df$shodan_results[i] <- data.frame(GetShodanResults(df$ShodanQuery[i]))
+    #df$shodan_results[i] <- GetShodanResults(df$ShodanQuery[i])
+    result <- shodan_search(query=df$ShodanQuery[i])
+
+    df$shodan_result[[i]] <- result
+    #df$shodan_total[i] <- result$total
+    #if ( result$total > 0 ){ df$shodan_matches[i] <- result$matches }
+    #else                   { df$shodan_matches[i] <- list(NA)}
+
+    #res_tmp_df<-data.frame(result$total,as.data.frame(result$matches))
+    #rbind(results_df, res_tmp_df)
+
+    #df$shodan_total[i] <- result$total
+    #if ( result$total > 0 ){ df$shodan_matches[i] <- result$matches }
+    #else                   { df$shodan_matches[i] <- NA}
 
     # Sleep 0.01 Seconds
     Sys.sleep(0.01)
 
     # Debug results
-    suppressMessages(suppressWarnings( print(df$shodan_results[i]) ))
+    #suppressMessages(suppressWarnings( print(df$shodan_results[i]) ))
   }
+
+
+
+
 
 
   return(df)
@@ -171,7 +191,9 @@ version="14.1x53"
 
 # Set query
 result <- shodan_search(query=paste(vendor,product,version,sep = "+"))
-df = result$matches
+df <- result$matches
+
+
 
 ###############################################################################
 #################################################################################
