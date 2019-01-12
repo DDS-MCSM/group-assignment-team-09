@@ -173,7 +173,7 @@ ExtractCPE <- function(cve_df){
   #cpe_regex <- "(cpe:[a-zA-Z0-9:_-.*]+)"   # RegEx "cpe:" + Alphanum + : + : + underscore (_) + *
   #cpe_regex <- "(cpe:[0-9](\.[0-9]+)?:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+:[^:a-zA-Z0-9_\*]+"
   #cpe_regex <- "cpe:2.3:([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+)\""
-  cpe_regex <- "cpe:([0-9]\\.[0-9]+?):([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):"
+  cpe_regex <- "cpe:([0-9]\\.[0-9]+?):([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):"
   cpes_parsed <- str_match( cpe_column, cpe_regex)
   #cpes_parsed <- str_match( cpe_column, pattern = cpe_regex)
 

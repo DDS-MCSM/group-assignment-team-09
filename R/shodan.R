@@ -62,18 +62,65 @@ AddShodanKey <- function() {
 }
 
 
+### Create Query Text Column for Shodan
+CPE_Create_Shodan_Query_Column <- function(df) {
+
+  # Create Shodan Query as : Vendor+Pruduct+Component
+  df$ShodanQuery <- paste(df$Vendor_Component,df$Product_Component,df$Version_Component,sep = "+")
+
+  # Filter Query Text: Remove "*"
+  df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "\\*")
+  #df$ShodanQuery <- stringr::str_remove_all(df$ShodanQuery, "+\$")
+
+  return(df)
+}
 
 ### Obtener informacion de Shodan de un Producto y Version
 
-GetShodanResults <- function(vendor, product, version){
+GetShodanResults <- function(query_text){
 
   #vendor="juniper"
   #product="junos"
   #version="14.1x53"
 
   # Set query
-  result <- shodan_search(query=paste(vendor,product,version,sep = "+"))
-  df = result$matches
+  result <- shodan_search(query=query_text)
+
+  print(paste("Num of results: ", result$total))
+
+  if (result$total > 0) {
+    df_res <- result$matches
+  }
+  else {
+    df_res <- data.frame()
+  }
+
+
+  return(df_res)
+}
+
+CPE_Shodan_Search <- function(df){
+
+  # Following code would generate a lot of Rqst agaist Shodan
+  # we'll try instead using a for loop with a sleep
+  #df$shodan_results <- lapply(df$ShodanQuery, GetShodanResults)
+
+  df$shodan_results <- matrix(data.frame(), nrow = nrow(df), ncol = 1)
+
+
+  for(i in 1:nrow(df)) {
+    # Debug
+    print(paste("Query:", i, df$ShodanQuery[i]))
+
+    df$shodan_results[i] <- GetShodanResults(df$ShodanQuery[i])
+
+    # Sleep 0.01 Seconds
+    Sys.sleep(0.01)
+
+    # Debug results
+    suppressMessages(suppressWarnings( cat(df$shodan_results[i]) ))
+  }
+
 
   return(df)
 }
