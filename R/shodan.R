@@ -172,6 +172,58 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
 #########
 #########
 
+
+
+  # #shodan_cpe_results <- CPE_Shodan_Search(cpes, forceShodanQuery = FALSE)
+  # #shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
+  # remove(shodan_cpes_results)
+  # i_init <- 1
+  # i_end  <- 10
+  # #shodan_cpes_results <- CPE_Shodan_Search1(cpes)
+  # for(i in i_init:i_end) {
+  #
+  #   #results <- shodan_search(query=df$ShodanQuery[1])
+  #   i <- 1
+  #   ### Test con i = 4 ####
+  #   print(paste("Query:", i, cpes$ShodanQuery[i]))
+  #
+  #   results <- GetShodanResults(query=cpes$ShodanQuery[i])
+  #
+  #   print(paste("Num of results: ", results$total))
+  #
+  #   cbind(cpes[c(i),],  results )
+  #
+  #   tmp_row <- rbind(cpes[c(i),])
+  #   tmp_row$ShodanResultsTotal <- as.integer(results$total)
+  #
+  #   if( results$total > 0) {
+  #     tmp_row <- cbind(tmp_row,as.data.frame(results$matches))
+  #   }
+  #
+  #   shodan_cpes_results <- rbind(cpes[c(i),], tmp_row,  fill=TRUE)
+  #   remove(tmp_row)
+  #   #tmp_row$shodan_results <- results
+  #
+  #   #test2 <- cbind(cpes[c(4),],results$matches)
+  #
+  #
+  #   # Agrega fila al data frame final
+  #   #shodan_cpe_results <- rbind(tmp_row)
+  #   #if(result$total == 0) {
+  #   #shodan_cpes_results <- rbind(cbind(cpes[c(i),]))
+  #   #}
+  #   #else {
+  #   #  shodan_cpes_results <- rbind(cbind(cpes[c(i),],results$matches))
+  #   #}
+  #
+  #
+  #
+  #   Sys.sleep(1)
+
+
+  }
+  # Old code:  shodan_cpe_results <-  CPE_Shodan_Search(cpes, i_init = 1, i_end = 10)
+
   #df$shodan_result <- list(nrow(df))
   #df$shodan_total <- matrix(integer(0),nrow = nrow(df))
   #df$shodan_matches <- list(nrow(df))
@@ -243,7 +295,7 @@ CPE_Shodan_Search1 <- function(df) {
   df <- apply(df, 1,
               function(x){
                 # Sleep
-                Sys.sleep(1.1)
+                Sys.sleep(2)
 
                 # Shodan query
                 print(paste("Query:", x["ShodanQuery"]))

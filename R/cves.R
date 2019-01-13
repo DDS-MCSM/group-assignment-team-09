@@ -215,38 +215,18 @@ FilterCPEsByPartComponent <- function(df, regex) {
 
 PlotCPEssByVendor <- function(df) {
 
-  library(ggplot2)
-  library(dplyr)
 
-  #ggplot(data.frame(df), aes(x=factor(df$Product_Component),fill=factor(df$Vendor_Component)))  +
-  #   geom_bar() +
-  #   coord_flip() +
-  #   xlab("xlabel") +
-  #   ggtitle(paste0("Vulnerabilidades según Vendor_Component")) +
-  #   theme(
-  #     legend.title=element_blank(),
-  #     legend.position=c(.90,.1)
-  #   )
-  #
-  #
-  #
+  data <- as.data.frame(table(df$Vendor_Component))
+  data <- data[with(data, order(Freq)), ]
+  data <- data[(data$Freq >= 15),]
 
 
-     ggplot(df, aes(x=df$Vendor_Component)) +
-       geom_bar() +
-       coord_flip()
+  ggplot(data, aes(x = Var1, y = Freq)) +
+    geom_bar(stat = "identity", color = "black", fill = "grey") +
+    coord_flip() +
+    labs(title = "CPE Vendors con mayores Vulnerabilidades\n", x = "Vendors", y = "Count\n") +
+    theme_classic()
 
-     #top_n(cpes, n=3, cpes$Vendor_Component)
-
-     #vendor <- cpes %>% arrange(desc(cpes$Vendor_Component))
-
-      # ggplot(., aes(x=type, y=freq))+
-      # geom_bar(stat='identity')
-
-  #
-  #
-  #
-  #     geom_bar(stat="count")
 
 }
 

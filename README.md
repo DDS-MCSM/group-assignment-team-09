@@ -4,7 +4,7 @@ Group Assignment base repository for the Data Driven Security subject of the [Cy
 
 ## Project Title
 
-Titulo por definir
+Busqueda en Shodan de Vulnerabilidades del año 2018
 
 
 ### Requirements
@@ -24,10 +24,20 @@ De los resultados tomaremos CPE y haremos una correlación con los resultados op
 
 ### Goals
 
+Integración de net-security y Shodan
+
 ### Data acquisition
+
+net-security: cves
 
 ### Cleansing and transformations
 
+Extraer CPEs de los CVEs de net-security
+
 ### Data analysis
 
+N/A
+
 ### Results / Conclusions.
+
+N/A
