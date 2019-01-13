@@ -177,8 +177,10 @@ CPE_Shodan_Search1 <- function(df) {
                  result <- shodan::shodan_search(query = x["ShodanQuery"])
                  if (result$total > 0) {
                    cpe.ips <- result$matches
+                   location <- cpe.ips$location
                    cpe.ips <- cpe.ips[,!(sapply(cpe.ips[1,], class) %in% c("list", "data.frame"))]
                    cpe.ips$cpe23Uri <- rep(x = x["cpe23Uri"], nrow(cpe.ips))
+                   cpe.ips <- dplyr::bind_cols(cpe.ips, location)
                    cpe.ips
                  } else {
                    NA
