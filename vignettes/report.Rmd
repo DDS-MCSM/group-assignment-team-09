@@ -40,9 +40,9 @@ Importar las funciones para crear el data frame de CVEs `./R/cves_filter.R`.
 source("../R/cves.R")
 ```
 
-### 1.1 Obtención de los CVEs
+### Obtención de los CVEs
 
-CVEs Data Frame de https://github.com/r-net-tools/security.datasets/raw/master/net.security/sysdata.rda
+CVEs Data Frame de [github/net.security/sysdata.rda](https://github.com/r-net-tools/security.datasets/raw/master/net.security/sysdata.rda)
 
 Filtros:
 
@@ -87,30 +87,34 @@ PlotPieChartCVEsByScore(cves)
 
 ## Obtener CPEs
 
-Según la espeficicación de Mitre, que se puede consultar en https://cpe.mitre.org/files/cpe-specification_2.1.pdf
+Según la espeficicación de Mitre para [CPEs](https://cpe.mitre.org/files/cpe-specification_2.1.pdf):
 
-Part Component
-The first component in a CPE Name is a single letter code that designates the particular platform
-part that is being identified. The following codes are defined for CPE 2.0.
- h = hardware part
- o = operating system part
- a = application part
-Additional character codes may be added as necessary in a future version of this specification.
-For example, maybe 'd' for driver, 'l' for library, 'r' for runtime environment, or v for
-virtualization. 
+> Part Component
+> The first component in a CPE Name is a single letter code that designates the particular platform
+> part that is being identified. The following codes are defined for CPE 2.0.
+>  h = hardware part
+>  o = operating system part
+>  a = application part
+> Additional character codes may be added as necessary in a future version of this specification.
+> For example, maybe 'd' for driver, 'l' for library, 'r' for runtime environment, or v for
+> virtualization. 
 
 De esta forma, para nuestro caso y por simplificar las busquedas que se realizarán en Shodan, filtraremos los CPEs quedandonos únicamente con los codes "(h, o , a)"
 
 
 ```{r cpe_functions, error=TRUE}
-cpes <- ExtractCPE(cves)
-cpes_score_10 <- ExtractCPE(cves_score_10)
+#cpes <- ExtractCPE(cves)
+#cpes_score_10 <- ExtractCPE(cves_score_10)
+#ExtractCPE2 corrección de Humbert, apply(cpes,2,class)  ::: todas las columnas eran listas
+cpes <- ExtractCPE2(cves)
+cpes_score_10 <- ExtractCPE2(cves_score_10)
 
 # Filtra: CPE part: 
 # filtra según el tag "part component"  h = hardware part|o = operating system part|a = application part
 cpes_part_regex <- "h|o|a"
 cpes <- FilterCPEsByPartComponent(cpes, cpes_part_regex)
 cpes_score_10 <- FilterCPEsByPartComponent(cpes_score_10, cpes_part_regex)
+remove(cpes_part_regex)
 
 ```
 ### Graficas de CPEs
@@ -144,6 +148,11 @@ Creamos un texto para lanzar contra Shodan con los parametros de CPE:
 
 Ejemplo: juniper+junos+14.1x52
 
+Lamentablemente por falta de tiempo y los siguientes errores no nos ha sido posible progresar en los siguientes puntos:
+
+- Data.frame CPES contenia Listas que han producido multiples problemas tanto para obtener otros datos como para representar con ggplot
+- Shodan limita el numero de req/sec a 1, con lo que al la hora de obtener los resultados devuelve un HTTP 502 y se corta el procesamiento. Hemos intentado dividir el procesamiento en trozos independientes pero por la falta de tiempo esto no se ha podido lograr. 
+
 
 ```{r shodan_search, include=TRUE}
 
@@ -152,20 +161,62 @@ Ejemplo: juniper+junos+14.1x52
 cpes <- CPE_Create_Shodan_Query_Column(cpes)
 cpes_score_10 <- CPE_Create_Shodan_Query_Column(cpes_score_10)
 
-#shodan_cpe_results <- CPE_Shodan_Search(cpes, forceShodanQuery = FALSE)
+# ToDO:   
+#saveRDS(object = shodan_cpe_results, file = "~/shodan.rds")
+#loadRDS(object = shodan_cpe_results, file = "~/shodan.rds")
+#save(cpes,file = "~/cpes.rds")
+#load(file = "~/cpes.rds")
+
+
+
 if(!exists("shodan_cpe_results", inherits = FALSE)) {
-  shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
+  shodan_cpe_results <- CPE_Shodan_Search1(cpes)
+  
+  #shodan_cpe_results <- CPE_Shodan_Search(cpes, forceShodanQuery = FALSE)
+  #shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
+  remove(shodan_cpes_results)
   i_init <- 1
   i_end  <- 10
+  #shodan_cpes_results <- CPE_Shodan_Search1(cpes)
   for(i in i_init:i_end) {
     
+    #results <- shodan_search(query=df$ShodanQuery[1])
+    i <- 1
     ### Test con i = 4 ####
-    results <- shodan_search(query=df$ShodanQuery[4])
-    tmp_row <- rbind(cpes[c(4),])
-    tmp_row$shodan_results <- results
+    print(paste("Query:", i, cpes$ShodanQuery[i]))
+    
+    results <- GetShodanResults(query=cpes$ShodanQuery[i])
+    
+    print(paste("Num of results: ", results$total))
+    
+    cbind(cpes[c(i),],  results )
+      
+    tmp_row <- rbind(cpes[c(i),])
+    tmp_row$ShodanResultsTotal <- as.integer(results$total)
+    
+    if( results$total > 0) {
+      tmp_row <- cbind(tmp_row,as.data.frame(results$matches))
+    }
+
+    shodan_cpes_results <- rbind(cpes[c(i),], tmp_row,  fill=TRUE)
+    remove(tmp_row)
+    #tmp_row$shodan_results <- results
+    
+    #test2 <- cbind(cpes[c(4),],results$matches)
+    
 
     # Agrega fila al data frame final
-    shodan_cpe_results <- rbind(tmp_row)
+    #shodan_cpe_results <- rbind(tmp_row)
+    #if(result$total == 0) {
+      #shodan_cpes_results <- rbind(cbind(cpes[c(i),]))
+    #}
+    #else {
+    #  shodan_cpes_results <- rbind(cbind(cpes[c(i),],results$matches))
+    #}
+    
+    
+    
+    Sys.sleep(1)
     
     
 
@@ -174,7 +225,7 @@ if(!exists("shodan_cpe_results", inherits = FALSE)) {
   
 }
 if(!exists("shodan_cpe_results_score_10", inherits = FALSE)) {
-  shodan_cpe_results_score_10 <- CPE_Shodan_Search(cpes_score_10)
+  shodan_cpe_results_score_10 <- CPE_Shodan_Search(cpes_score_10, 1, nrow(cpes_score_10))
 }
 
 # Shodan Search
@@ -205,61 +256,3 @@ PlotMapShodanResults(shodan_res)
 
 
 
-
-
-
-
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
-
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
-
-## Vignette Info
-
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
-
-## Styles
-
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
-
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
