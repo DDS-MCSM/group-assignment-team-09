@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<meta name="date" content="2019-01-13" />
+
+<title>Práctica Team 09: Busqueda en Shodan de vulnerabilidades conocidas recientes</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Práctica Team 09: Busqueda en Shodan de vulnerabilidades conocidas recientes</h1>
+<h4 class="author"><em>Juan José Sanz Martín</em></h4>
+<h4 class="author"><em>Alberto López Millán</em></h4>
+<h4 class="date"><em>2019-01-13</em></h4>
+
+
+
+<div id="introduccion" class="section level2">
+<h2>Introducción</h2>
+<p>El obtetivo alcanzado en esta práctica ha sido demostrar la potencia que puede alzanzarse al utilizar la libreria net-security junto con la libreria de shodan para R. El potencial de la unión de estas herramientas, permite obtener datasets amplios de Vulnerabilidades conocidad asociadas a CPEs y su estado actual.</p>
+<div id="la-pregunta" class="section level3">
+<h3>La Pregunta</h3>
+</div>
+</div>
+<div id="configurar-token-de-r-shodan" class="section level2">
+<h2>Configurar Token de R Shodan</h2>
+<p>Para poder utlizar la libreria de Shodan para R, es necsario proporcionar un token válido.</p>
+<p>En este caso, se ha optado por almacenar este dato en el fichero de entorno de R (.Renviron).</p>
+<p>Para ello, y ejecutanto el código incluido en las siguientes lineas, se abrira el fichero .Renviron En ese archivo hay que almacenar el token con formato: SHODAN_API_KEY = “<token>” y reiniciar R Studio</p>
+</div>
+<div id="cves" class="section level2">
+<h2>CVEs</h2>
+<p>Las funciones para crear y manipular el data frame de CVEs se incluyen en el archivo <code>./R/cves_filter.R</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">source</span>(<span class="st">&quot;../R/cves.R&quot;</span>)</code></pre></div>
+<div id="obtencion-de-los-cves" class="section level3">
+<h3>Obtención de los CVEs</h3>
+<p>CVEs Data Frame de <a href="https://github.com/r-net-tools/security.datasets/raw/master/net.security/sysdata.rda">github/net.security/sysdata.rda</a></p>
+<p>Filtros aplicados son los siguientes:</p>
+<ul>
+<li>Access Vector: Network</li>
+<li>Score &gt;= 8</li>
+<li>Year == 2018</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cves_full &lt;-<span class="st"> </span><span class="kw">RetrieveCVEs</span>()
+cves &lt;-<span class="st"> </span><span class="kw">FilterCVEsByYear</span>(cves_full, params<span class="op">$</span>filter_year)
+cves &lt;-<span class="st"> </span><span class="kw">FilterCVEsByAccessVectorNetwork</span>(cves)
+cves &lt;-<span class="st"> </span><span class="kw">FilterCVEsByScore</span>(cves, params<span class="op">$</span>filter_score)
+
+<span class="co"># Remove Rows containing NAs in important columns</span>
+cves &lt;-<span class="st"> </span><span class="kw">FilterNAs</span>(cves)</code></pre></div>
+</div>
+<div id="graficas-de-cves" class="section level3">
+<h3>Graficas de CVEs</h3>
+<p>CVEs filtrados y representados por fecha de publicación y clasificados por su score.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">PlotCVEsByPublishedDate</span>(cves)</code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAArlBMVEUAAAAAACsAAFUAAP8AK1UAK4AAVVUAVaorAAArACsrAFUrKwArK1UrK4ArVVUrVYArVaorgNRVAABVACtVAFVVKwBVKytVK4BVVQBVVStVVVVVgKpVqtRVqv+AKwCAKyuAK1WAVSuAVVWAgCuA1P+qVQCqVSuq1NSq1P+q/6qq/9Sq///UgCvUqlXUqoDUqqrU1IDU1KrU/6rU////qlX/1ID/1Kr//6r//9T////0J57NAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAH/UlEQVR4nO2ciXraRhRGx8SuyeK24Lpbgt20kCYNbt0iArz/i3UW7RIcQSQ2/+f7EiIkrkZHd2akGSlmJTZiDl2AY0eCAAkCJAiQIECCAAkCJAg4gKDH18a8+bi8vxjbhXn/6qlvLH6pwmJ4NXOfy/veZ/enZpM1X7eFCcUYdLiLElPzbuXsTM3ALw3m/eu1G5Ogv9/uRZArp9mTo8Uw1mFzZ+ZNNRVUs3rTT1siq2LW0ajrvVmiZC++jjlL+aNcDC9/MRcjL8ZJscvv3XKaQfM7Y75f+Y/L8fLemN5f7usv7425+bhKNm8RkxTbZtDihy5zNWaangZXxyL7Z+7boJApi6F558xlgi5GbjkRZPNv9mgG7sNt4tyGr3sfv4TNx0nStUTcBnWeqSmZoMhcryY+i/IZZI/OJlkmKCwngtL8++f316b3ORHkPDvZyc9aLO/ee7H0EK2M3id3/DWCBiVBg0RQrHdxd/H232EmyH/dpaDIZuvL2n62dXLZOjG/ujO/Qwa5j3wV6zqDlg9Wzvymzaq7nqSb9w2f+ygKcm1QkDHvO0HZciLMinC1c2p8k1Rqg7oR5FvnvTTRjse+u1BceRvuWEIjHdcd3w05eX3z3d26Xmy2+mA7sfd2uw+m92ehF+sog+5Hvpq1GHdHWu6CWiC0QfZcmk6vR5tyrIKOhmMVNHWNwFGk0NERGunb/XTxp0jWi4laQhWb7OM29TSJ78WOuQ0yFfa69202fhHoqixrMC9KHECQu6J/aNpQP0NB9kp6Mmp8L/YMBdlebDJq0JU92yrmM6jxvdgzFLTdvVjHgqqd1hEI2oquBVV8HF5Q0+ugDtqgar7sIqjDS6UsUtR0YuxrBLGOGh+VL/ZZC7NIjW/I1guqKfnW6dFEUIPftJZT2e/mr766ipXLucvRtySousmOxnJt0NZVDPPjqARVvthC0HZkgqgQZyMoZFDTS6FnKGg1dfNuPP0ch35+gtbNi0U+r8qPNp2LoGbN9qZ5Mf91dcr1XARVN1kryDdC1XvVOKey1IoDpb89N9YLqifJoHUXSJVTcOpszKC6EcX5hscrVzWX1OUvqnvEnzTZpKOw9bcIO4woNt/n2QhqOqK47T7PRtB2I4rN93k2gnZ8uuP5CNpx6lmChObmkROYmz8sR/aE2fEhQYBRE72ZWNBUrfQaJAiQIMBsHrKfhFcEsmbK3rYVb/vdS23XfnQ22dA/UzwohYgKr+uVRw6qQVyU3CB5pRy1YJgdjmdzLxZd+1iLYS8XsLjJ1L1OMlrcjt24WrJhbowthIjXJ5QFVYPYLXK7qpajFgqzy/FgN28DLn/7FBufmss7Z3zeL+TbdOAK8jBONyxemdsQYX0IYU/Q/M1d+DsXpRgk+0F9OcJZ7v0xKr9uC2G2Ph4SNM2npJU679uA/92OnencPt2ckbMSNiwmiAuRrHernK/+yOV2/hW1cpB5vzCSWSyHD2LP8mI4smXKPwcPYbY/Hr5QzI7bT5+5ocenggBXvqKgyaAcIhXkhnEvfPr607Q2SHQ1K2V/rhxxEPvzfORmYbY9HhbkomwK6PMgSeX6GbYkZe0/o17SHhUEVYJUpzJz5YiDVAU1CLPt8WAjnTfu0nkYp2QyABna3qQRDmmd318IkTbSdjFyr8qPCt1HNYgLnyViqRwhSLWKUZhdjgcyaBJawEXaqF28Thu1uDqFTj3ftRZPWQgRpa8Umm9smUIjbQWtDTIpd/O5coQgrpH+eRTe928YZofjOe2b1WXjp9935oQFuQvc7v8/jRMWtB8kCJAgQIIACQIkCJAgQIIACQIkCJAgQIIACQIkCJAg4LCC3IPYyaxDGICtjKD/NKt7Pjkdibfruy3igQXZY08Hg2NBs8oWNaSCOv+/+w4vyOfM8mGcjFM/JfN4bnZweW+u7Bd+cnD+7TAeX/bzfen6WVQcd26XwwuKrmJB8UzHUzyPF08xWl03T6/iuaJ4XjKe70vXzzp8yPIY2qAwCZXMlT0lrVAyOzi/ebwO81fx3FqYzkrXR8WHJVrm8BkUZpJvK4LS2cE1gtL1DV6V/AqOQpCtMi9LVSy6egxTjLkqlggK831Ruv7luPKMRnscg6DVxFz+WGmkw+zgYhg30qPckxp+vi9df86N9AkgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQYAEARIESBAgQcD/XXcg8KlDo4gAAAAASUVORK5CYII=" /><!-- --></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">PlotPieChartCVEsByScore</span>(cves)</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+</div>
+<div id="obtener-cpes" class="section level2">
+<h2>Obtener CPEs</h2>
+<p>Según la espeficicación de Mitre para <a href="https://cpe.mitre.org/files/cpe-specification_2.1.pdf">CPEs</a>:</p>
+<blockquote>
+<p>Part Component The first component in a CPE Name is a single letter code that designates the particular platform part that is being identified. The following codes are defined for CPE 2.0. h = hardware part o = operating system part a = application part Additional character codes may be added as necessary in a future version of this specification. For example, maybe ‘d’ for driver, ‘l’ for library, ‘r’ for runtime environment, or v for virtualization.</p>
+</blockquote>
+<p>De esta forma, para nuestro caso y por simplificar las busquedas que se realizarán en Shodan, filtraremos los CPEs quedandonos únicamente con los codes “(h, o , a)”</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#cpes &lt;- ExtractCPE(cves)</span>
+<span class="co">#ExtractCPE2 corrección de Humbert, apply(cpes,2,class)  ::: todas las columnas eran listas</span>
+cpes &lt;-<span class="st"> </span><span class="kw">ExtractCPE2</span>(cves)</code></pre></div>
+<pre><code>## Warning in stri_match_first_regex(string, pattern, opts_regex =
+## opts(pattern)): argument is not an atomic vector; coercing</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Filtra: CPE part: </span>
+<span class="co"># filtra según el tag &quot;part component&quot;  h = hardware part|o = operating system part|a = application part</span>
+cpes_part_regex &lt;-<span class="st"> &quot;h|o|a&quot;</span>
+cpes &lt;-<span class="st"> </span><span class="kw">FilterCPEsByPartComponent</span>(cpes, cpes_part_regex)
+<span class="kw">remove</span>(cpes_part_regex)</code></pre></div>
+<div id="graficas-de-cpes" class="section level3">
+<h3>Graficas de CPEs</h3>
+<p>Esta gráfica muestra los ‘Vendors’ con mayores Vulnerabilidades conocidas para el año en estudio.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">PlotCPEssByVendor</span>(cpes)</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+</div>
+<div id="shodan.io" class="section level2">
+<h2>Shodan.io</h2>
+<p>Las funciones relacionadas con las llamadas a Shodan y la representación de los resultados obtenidos se incluyen en el archivo <code>../R/shodan.R</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">source</span>(<span class="st">&quot;../R/shodan.R&quot;</span>)</code></pre></div>
+<div id="busqueda-en-shodan" class="section level3">
+<h3>Busqueda en Shodan</h3>
+<p>Creamos un texto para lanzar contra Shodan con los parametros de CPE:</p>
+<p>Formato usado para las llamadas a Shodan vendor+product+version</p>
+<ul>
+<li>Vendor Component</li>
+<li>Product Component</li>
+<li>Version Component</li>
+</ul>
+<p>Ejemplo: juniper+junos+14.1x52</p>
+<p>Este texto, se guarda en el data frame de CPES en la columna ‘cpes$ShodanQuery’</p>
+</div>
+<div id="busqueda-en-shodan-1" class="section level3">
+<h3>Busqueda en Shodan</h3>
+<p>Lamentablemente por falta de tiempo y los diversos errores no nos ha sido posible progresar con el análisis de los datos, los errores que hemos encontrado son entre otros:</p>
+<ul>
+<li>Data.frame CPES contenia Listas que han producido multiples problemas tanto para obtener otros datos como para representar con ggplot</li>
+<li>Shodan limita el numero de req/sec a 1, con lo que al la hora de obtener los resultados devuelve un HTTP 502 y se corta el procesamiento. Hemos intentado dividir el procesamiento en trozos independientes pero por la falta de tiempo esto no se ha podido lograr.</li>
+</ul>
+<p>En cualquier caso, si se ha podido ver el gran potencial que puede tener el cruce de datos entre net-security y shodan.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># ToDO:   </span>
+<span class="co">#saveRDS(object = shodan_cpe_results, file = &quot;~/shodan.rds&quot;)</span>
+<span class="co">#loadRDS(object = shodan_cpe_results, file = &quot;~/shodan.rds&quot;)</span>
+<span class="co">#save(cpes,file = &quot;~/cpes.rds&quot;)</span>
+<span class="co">#load(file = &quot;~/cpes.rds&quot;)</span>
+
+
+
+<span class="cf">if</span>(<span class="op">!</span><span class="kw">exists</span>(<span class="st">&quot;shodan_cpes_results&quot;</span>, <span class="dt">inherits =</span> <span class="ot">FALSE</span>)) {
+  <span class="kw">suppressMessages</span>(
+    <span class="kw">suppressWarnings</span>(
+                      shodan_cpes_results &lt;-<span class="st"> </span><span class="kw">CPE_Shodan_Search1</span>(cpes)
+    ) )
+  
+  <span class="co">#cpes_01 &lt;- cpes[1:199,]</span>
+  <span class="co">#shodan_cpe_results_01 &lt;- CPE_Shodan_Search1(cpes_01)</span>
+  <span class="co">#cpes_02 &lt;- cpes[200:399,]</span>
+  <span class="co">#shodan_cpe_results_02 &lt;- CPE_Shodan_Search1(cpes_02)</span>
+  <span class="co">#cpes_03 &lt;- cpes[400:599,]</span>
+  <span class="co">#shodan_cpe_results_03 &lt;- CPE_Shodan_Search1(cpes_03)</span>
+  <span class="co">#cpes_04 &lt;- cpes[600:799,]</span>
+  <span class="co">#shodan_cpe_results_04 &lt;- CPE_Shodan_Search1(cpes_04)</span>
+  <span class="co">#cpes_05 &lt;- cpes[800:999,]</span>
+  <span class="co">#shodan_cpe_results_05 &lt;- CPE_Shodan_Search1(cpes_05)</span>
+  
+  ### Error : al realizar multples llamadas a shodan, obtenermos un error 502. Tendriamos que trabajar con trozos del data frame más pequeños y/o utilizar un tiempo de espera más grande.
+  <span class="co">#Error in shodan::shodan_search(query = x[&quot;ShodanQuery&quot;]) : </span>
+  <span class="co">#Bad Gateway (HTTP 502).</span>
+
+}</code></pre></div>
+</div>
+<div id="representacion-de-los-datos-de-shodan" class="section level3">
+<h3>Representación de los datos de Shodan</h3>
+<p>Las siguientes partes del informe, se dejan a modo de muestra de las opciones de representación que permite el cruce de datos entre net-security y shodan.</p>
+<p>En el ejemplo, se ha mostrado en un mapa los sistemas con un CPE Vulnerable “juniper+junos+14”.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Shodan plot</span>
+shodan_res &lt;-<span class="st"> </span><span class="kw">GetShodanResults</span>(<span class="dt">query=</span><span class="st">&quot;juniper+junos+14&quot;</span>)
+<span class="kw">PlotMapShodanResults</span>(<span class="kw">as.data.frame</span>(shodan_res))</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Resultados parciales del una busqueda en shodan.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># </span>
+<span class="kw">PlotMapShodanCPEResults</span>(shodan_cpes_results)</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+</div>
+<div id="conclusiones" class="section level2">
+<h2>Conclusiones</h2>
+<p>Sin tener grandes datasets podemos afirmar que, como era de esperar, en zonas como África, regiones casi despobladas como Australia, Rusia, Zonas del Amazonas y demás, no se han encontrado productos vulnerables.</p>
+<p>En este sentido, la mayor parte de los puntos que se ven en el mapa corresponden con las zonas más activas en cuanto a servidores y empresas: USA, Europa, Singapur, India, China, etc …</p>
+<p>Adicionalmente, queda esta práctica a modo de ‘Proof-of-Concept’ de la posible integración de shodan con net-security.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
