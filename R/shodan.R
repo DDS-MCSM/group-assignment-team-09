@@ -40,6 +40,27 @@ if (!suppressMessages(suppressWarnings(require("rworldmap", quietly = T)))) {
 }
 library(rworldmap)
 
+# Install Dependencies, if needed: maps
+if (!suppressMessages(suppressWarnings(require("maps", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("maps", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+library(maps)
+
+
+# Install Dependencies, if needed: plyr
+if (!suppressMessages(suppressWarnings(require("plyr", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("plyr", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+library(plyr)
+
+# Install Dependencies, if needed: xtable
+if (!suppressMessages(suppressWarnings(require("xtable", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("xtable", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+library(xtable)
+
+
+
 
 ### Add Shodan Key
 
@@ -102,59 +123,6 @@ GetShodanResults <- function(query_text){
 
 
   return(result)
-}
-
-CPE_Shodan_Create_Empty_DF <- function(df) {
-
-  empty_df <- data.frame(matrix(ncol = ncol(df), nrow = 0))  # nrow = nrow(df)
-  colnames(empty_df) <- colnames(df)
-  empty_df$shodan_result <- list()
-
-  return(empty_df)
-
-
-  # #shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
-  # shodan_cpe_results <- data.frame()
-  # ##shodan_cpe_results <-  CPE_Shodan_Search(cpes)
-  # #init <- 1
-  # #for(i in 1:nrow(cpes)) {
-  # for(i in 1:nrow(cpes)) {
-  #   #i <- 1
-  #   shodanresults <- GetShodanResults(cpes$ShodanQuery[i])
-  #
-  #   row_shodan <- cbind(cpes[i,], shodanresults)
-  #   shodan_cpe_results <- rbind(shodan_cpe_results, row_shodan)
-  #
-  #
-  #
-  #   if((i %% 10) == 0) {
-  #     # Each 10 items sleep one second
-  #     Sys.sleep(1)
-  #   }
-  #   else {
-  #     # Sleep 0.1 Seconds
-  #     Sys.sleep(0.1)
-  #   }
-
-
-
-    #test$ShodanResultTotal <- shodanresults$total
-    #
-    #test$ShodanResultMatches <- shodanresults$matches
-    #
-    #test$ShodanResult = shodanresults
-    #
-    #
-    #test2 <- cbind(test, list(shodanresults$matches))
-    #
-    #
-    #test$matches <- list(shodanresults$matches)
-    #test <- cbind(cpes[i,],shodanresults$total,shodanresults$matches)
-    #
-    #shodan_cpe_results <- rbind(shodan_cpe_results,cbind(cpes,))
-
-
-
 }
 
 CPE_Shodan_Search <- function(df, i_init, i_end){
@@ -220,16 +188,11 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
   #
   #   Sys.sleep(1)
 
-
-  }
   # Old code:  shodan_cpe_results <-  CPE_Shodan_Search(cpes, i_init = 1, i_end = 10)
 
   #df$shodan_result <- list(nrow(df))
   #df$shodan_total <- matrix(integer(0),nrow = nrow(df))
   #df$shodan_matches <- list(nrow(df))
-
-
-
 
   for(i in i_init:nrow(df)) {
     # Debug
@@ -247,7 +210,7 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
     }
     else
     {
-      df$shodan_matches[[i]] <- list(NA)
+      df$shodan_matches[[i]] <- NA
     }
 
     #res_tmp_df<-data.frame(result$total,as.data.frame(result$matches))
@@ -257,18 +220,8 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
     #if ( result$total > 0 ){ df$shodan_matches[i] <- result$matches }
     #else                   { df$shodan_matches[i] <- NA}
 
-    if((i %% 10) == 0) {
-      # Each 10 items sleep one second
-      Sys.sleep(1)
-    }
-    else if((i %% 100) == 0) {
-      # Each 100 items sleep 5 second
-      Sys.sleep(1)
-    }
-    else {
-      # Sleep 0.1 Seconds
-      Sys.sleep(0.3)
-    }
+    Sys.sleep(1)
+
 
     if ( i >= i_end ) {
       break
@@ -278,18 +231,14 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
     #suppressMessages(suppressWarnings( print(df$shodan_results[i]) ))
   }
 
-
-
-
-
-
   return(df)
 }
 
+
 # Funcion corregida por de Humbert
 CPE_Shodan_Search1 <- function(df) {
-  #set.seed(666)
-  #df <- df[sample(1:nrow(df), 15), ]
+  set.seed(666)
+  df <- df[sample(1:nrow(df), 20), ]
 
 
   df <- apply(df, 1,
@@ -298,9 +247,9 @@ CPE_Shodan_Search1 <- function(df) {
                 Sys.sleep(2)
 
                 # Shodan query
-                print(paste("Query:", x["ShodanQuery"]))
+                #print(paste("Query:", x["ShodanQuery"]))
                 result <- shodan::shodan_search(query = x["ShodanQuery"])
-                print(paste("Num of results: ", result$total))
+                #print(paste("Num of results: ", result$total))
                 if (result$total > 0) {
                   cpe.ips <- result$matches
                   location <- cpe.ips$location
@@ -326,9 +275,22 @@ PlotMapShodanResults <- function(df){
   world = map_data("world")
   (ggplot() +
       geom_polygon(data=world, aes(x=long, y=lat, group=group)) +
-      geom_point(data=df, aes(x=df$location$longitude, y=df$location$latitude), colour="#EE760033",size=1.75) +
+      geom_point(data=df, aes(x=df$matches.location$longitude, y=df$matches.location$latitude), colour="#EE760033",size=1.75) +
       labs(x="",y="") +
       theme_few())
+
+
+}
+
+PlotMapShodanCPEResults <- function(df){
+
+  world = map_data("world")
+  (ggplot() +
+      geom_polygon(data=world, aes(x=long, y=lat, group=group)) +
+      geom_point(data=df, aes(x=longitude, y=latitude), colour="#EE760033",size=1.75) +
+      labs(x="",y="") +
+      theme_few())
+
 
 }
 
@@ -345,11 +307,7 @@ PlotMapShodanResults <- function(df){
 other <- function() {
 
 
-install.packages("xtable")
-install.packages("maps")
-library(plyr)  # ddply
-library(xtable)
-library(maps)
+
 
 
 

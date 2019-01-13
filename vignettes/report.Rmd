@@ -1,5 +1,5 @@
 ---
-title: "Práctica Team 09: Busqueda en Shodan de Vulnerabilidades del año 2018"
+title: "Práctica Team 09: Busqueda en Shodan de vulnerabilidades conocidas recientes"
 author: 
 - name: "Juan José Sanz Martín"
 - name: "Alberto López Millán"
@@ -7,8 +7,8 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 params:
   filter_year: "2018"
   filter_score: 8
@@ -17,6 +17,7 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 
 ## Introducción
 
@@ -68,12 +69,7 @@ cves <- FilterCVEsByScore(cves, params$filter_score)
 # Remove Rows containing NAs in important columns
 cves <- FilterNAs(cves)
 
-# Create a df containing only CVEs with scope 10
-cves_score_10 <- FilterCVEsByScore(cves, 10) 
 
-
-# unique(cves[,"cvss3.av"])
-# unique(cves$cvss3.av)
 ```
 
 ### Graficas de CVEs
@@ -112,16 +108,14 @@ De esta forma, para nuestro caso y por simplificar las busquedas que se realizar
 
 ```{r cpe_functions, error=TRUE}
 #cpes <- ExtractCPE(cves)
-#cpes_score_10 <- ExtractCPE(cves_score_10)
 #ExtractCPE2 corrección de Humbert, apply(cpes,2,class)  ::: todas las columnas eran listas
 cpes <- ExtractCPE2(cves)
-cpes_score_10 <- ExtractCPE2(cves_score_10)
+
 
 # Filtra: CPE part: 
 # filtra según el tag "part component"  h = hardware part|o = operating system part|a = application part
 cpes_part_regex <- "h|o|a"
 cpes <- FilterCPEsByPartComponent(cpes, cpes_part_regex)
-cpes_score_10 <- FilterCPEsByPartComponent(cpes_score_10, cpes_part_regex)
 remove(cpes_part_regex)
 
 ```
@@ -162,10 +156,9 @@ Este texto, se guarda en el data frame de CPES en la columna 'cpes$ShodanQuery'
 
 ```{r shodan_searchquery, include=FALSE}
 
-#cpes_score_10
 #cpes
 cpes <- CPE_Create_Shodan_Query_Column(cpes)
-cpes_score_10 <- CPE_Create_Shodan_Query_Column(cpes_score_10)
+
 
 ```
 
@@ -178,7 +171,7 @@ Lamentablemente por falta de tiempo y los diversos errores no nos ha sido posibl
 
 En cualquier caso, si se ha podido ver el gran potencial que puede tener el cruce de datos entre net-security y shodan.
 
-```{r shodan_search, include=FALSE}
+```{r shodan_search, include=TRUE}
 
 
 # ToDO:   
@@ -189,28 +182,27 @@ En cualquier caso, si se ha podido ver el gran potencial que puede tener el cruc
 
 
 
-if(!exists("shodan_cpe_results", inherits = FALSE)) {
-  #shodan_cpe_results <- CPE_Shodan_Search1(cpes)
+if(!exists("shodan_cpes_results", inherits = FALSE)) {
+  suppressMessages(
+    suppressWarnings(
+                      shodan_cpes_results <- CPE_Shodan_Search1(cpes)
+    ) )
   
-  cpes_01 <- cpes[1:199,]
-  shodan_cpe_results_01 <- CPE_Shodan_Search1(cpes_01)
-  cpes_02 <- cpes[200:399,]
-  shodan_cpe_results_02 <- CPE_Shodan_Search1(cpes_02)
-  cpes_03 <- cpes[400:599,]
-  shodan_cpe_results_03 <- CPE_Shodan_Search1(cpes_03)
-  cpes_04 <- cpes[600:799,]
-  shodan_cpe_results_04 <- CPE_Shodan_Search1(cpes_04)
-  cpes_05 <- cpes[800:999,]
-  shodan_cpe_results_05 <- CPE_Shodan_Search1(cpes_05)
+  #cpes_01 <- cpes[1:199,]
+  #shodan_cpe_results_01 <- CPE_Shodan_Search1(cpes_01)
+  #cpes_02 <- cpes[200:399,]
+  #shodan_cpe_results_02 <- CPE_Shodan_Search1(cpes_02)
+  #cpes_03 <- cpes[400:599,]
+  #shodan_cpe_results_03 <- CPE_Shodan_Search1(cpes_03)
+  #cpes_04 <- cpes[600:799,]
+  #shodan_cpe_results_04 <- CPE_Shodan_Search1(cpes_04)
+  #cpes_05 <- cpes[800:999,]
+  #shodan_cpe_results_05 <- CPE_Shodan_Search1(cpes_05)
   
   ### Error : al realizar multples llamadas a shodan, obtenermos un error 502. Tendriamos que trabajar con trozos del data frame más pequeños y/o utilizar un tiempo de espera más grande.
   #Error in shodan::shodan_search(query = x["ShodanQuery"]) : 
   #Bad Gateway (HTTP 502).
 
-  
-}
-if(!exists("shodan_cpe_results_score_10", inherits = FALSE)) {
-  shodan_cpe_results_score_10 <- CPE_Shodan_Search(cpes_score_10, 1, nrow(cpes_score_10))
 }
 
 
@@ -221,19 +213,37 @@ if(!exists("shodan_cpe_results_score_10", inherits = FALSE)) {
 ### Representación de los datos de Shodan
 
 
-Las siguientes partes del informe, se dejan a modo de muestra de las multiples opciones de representación que permite el cruce de datos entre net-security y shodan.
+Las siguientes partes del informe, se dejan a modo de muestra de las opciones de representación que permite el cruce de datos entre net-security y shodan.
+
+En el ejemplo, se ha mostrado en un mapa los sistemas con un CPE Vulnerable "juniper+junos+14".
+
+```{r shodan_plot_example, include=TRUE}
+
+# Shodan plot
+shodan_res <- GetShodanResults(query="juniper+junos+14")
+PlotMapShodanResults(as.data.frame(shodan_res))
+```
+
+
+Resultados parciales del una busqueda en shodan.
 
 ```{r shodan_plot, include=TRUE}
 
-# Shodan plot
-PlotMapShodanResults(shodan_cpe_results_score_10$shodan_results[18])
-PlotMapShodanResults(shodan_res)
+# 
+PlotMapShodanCPEResults(shodan_cpes_results)
+
 
 ```
 
 
 
+## Conclusiones
 
+Sin tener grandes datasets podemos afirmar que, como era de esperar, en zonas como África, regiones casi despobladas como Australia, Rusia, Zonas del Amazonas y demás, no se han encontrado productos vulnerables.
+
+En este sentido, la mayor parte de los puntos que se ven en el mapa corresponden con las zonas más activas en cuanto a servidores y empresas: USA, Europa, Singapur, India, China, etc ...
+
+Adicionalmente, queda esta práctica a modo de 'Proof-of-Concept' de la posible integración de shodan con net-security.
 
 
 
