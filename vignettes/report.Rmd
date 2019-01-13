@@ -152,7 +152,7 @@ Ejemplo: juniper+junos+14.1x52
 cpes <- CPE_Create_Shodan_Query_Column(cpes)
 cpes_score_10 <- CPE_Create_Shodan_Query_Column(cpes_score_10)
 
-shodan_cpe_results <- CPE_Shodan_Search(cpes)
+shodan_cpe_results <- CPE_Shodan_Search1(cpes)
 if(!exists("shodan_cpe_results", inherits = FALSE)) {
   shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
   i_init <- 1

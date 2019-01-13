@@ -160,7 +160,7 @@ CPE_Shodan_Create_Empty_DF <- function(df) {
 
 
 CPE_Shodan_Search1 <- function(df) {
-  set.seed(666)
+  set.seed(668)
   df <- df[sample(1:nrow(df), 5), ]
 
   ctrl <- 0
@@ -177,6 +177,7 @@ CPE_Shodan_Search1 <- function(df) {
                  result <- shodan::shodan_search(query = x["ShodanQuery"])
                  if (result$total > 0) {
                    cpe.ips <- result$matches
+                   cpe.ips <- cpe.ips[,!(sapply(cpe.ips[1,], class) %in% c("list", "data.frame"))]
                    cpe.ips$cpe23Uri <- rep(x = x["cpe23Uri"], nrow(cpe.ips))
                    cpe.ips
                  } else {
@@ -184,6 +185,7 @@ CPE_Shodan_Search1 <- function(df) {
                  }
                })
   df <- df[!is.na(df)]
+  df <- dplyr::bind_rows(df)
   return(df)
 }
 
