@@ -199,6 +199,33 @@ FilterCPEsByPartComponent <- function(df, regex) {
   return(filtered_cpes)
 }
 
+
+PlotCPEssByVendor <- function(df) {
+
+  # library(ggplot2)
+  #
+  # ggplot(data.frame(df), aes(x=factor(df$Product_Component),fill=factor(df$Vendor_Component)))  +
+  #   geom_bar() +
+  #   coord_flip() +
+  #   xlab("Dominio") +
+  #   ggtitle(paste0("Vulnerabilidades según Vendor_Component")) +
+  #   theme(
+  #     legend.title=element_blank(),
+  #     legend.position=c(.90,.1)
+  #   )
+  #
+  #
+  #
+  #   ggplot(cpes, aes(x=cpes$Product_Component)) +
+  #     coord_flip() +
+  #     geom_histogram(binwidth=0.5, aes(fill=..count..))
+  #
+  #
+  #
+  #     geom_bar(stat="count")
+
+}
+
 ####################################################
 ####################################################
 #### TESTs y pruebas a integrar en funciones

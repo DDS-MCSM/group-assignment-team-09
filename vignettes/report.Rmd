@@ -68,7 +68,7 @@ cves_score_10 <- FilterCVEsByScore(cves, 10)
 # unique(cves$cvss3.av)
 ```
 
-### 1.x Graficas de CVEs
+### Graficas de CVEs
 
 CVEs filtrados y representados por fecha de publicación y clasificados por su score.
 
@@ -113,6 +113,15 @@ cpes <- FilterCPEsByPartComponent(cpes, cpes_part_regex)
 cpes_score_10 <- FilterCPEsByPartComponent(cpes_score_10, cpes_part_regex)
 
 ```
+### Graficas de CPEs
+
+
+
+```{r cpe_plots, error=TRUE}
+
+PlotCPEssByVendor(cpes)
+
+```
 
 ## Importar funciones de Shodan.io
 
@@ -145,7 +154,9 @@ cpes_score_10 <- CPE_Create_Shodan_Query_Column(cpes_score_10)
 
 #shodan_cpe_results <- CPE_Shodan_Search(cpes, forceShodanQuery = FALSE)
 if(!exists("shodan_cpe_results", inherits = FALSE)) {
-  shodan_cpe_results <- CPE_Shodan_Search(cpes)
+
+  shodan_cpe_results <-  CPE_Shodan_Search(cpes)
+  
 }
 if(!exists("shodan_cpe_results_score_10", inherits = FALSE)) {
   shodan_cpe_results_score_10 <- CPE_Shodan_Search(cpes_score_10)
