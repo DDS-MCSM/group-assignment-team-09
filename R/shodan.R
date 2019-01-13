@@ -110,30 +110,31 @@ CPE_Shodan_Create_Empty_DF <- function(df) {
   colnames(empty_df) <- colnames(df)
   empty_df$shodan_result <- list()
 
+  return(empty_df)
 
 
-  #shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
-  shodan_cpe_results <- data.frame()
-  ##shodan_cpe_results <-  CPE_Shodan_Search(cpes)
-  #init <- 1
-  #for(i in 1:nrow(cpes)) {
-  for(i in 1:nrow(cpes)) {
-    #i <- 1
-    shodanresults <- GetShodanResults(cpes$ShodanQuery[i])
-
-    row_shodan <- cbind(cpes[i,], shodanresults)
-    shodan_cpe_results <- rbind(shodan_cpe_results, row_shodan)
-
-
-
-    if((i %% 10) == 0) {
-      # Each 10 items sleep one second
-      Sys.sleep(1)
-    }
-    else {
-      # Sleep 0.1 Seconds
-      Sys.sleep(0.1)
-    }
+  # #shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
+  # shodan_cpe_results <- data.frame()
+  # ##shodan_cpe_results <-  CPE_Shodan_Search(cpes)
+  # #init <- 1
+  # #for(i in 1:nrow(cpes)) {
+  # for(i in 1:nrow(cpes)) {
+  #   #i <- 1
+  #   shodanresults <- GetShodanResults(cpes$ShodanQuery[i])
+  #
+  #   row_shodan <- cbind(cpes[i,], shodanresults)
+  #   shodan_cpe_results <- rbind(shodan_cpe_results, row_shodan)
+  #
+  #
+  #
+  #   if((i %% 10) == 0) {
+  #     # Each 10 items sleep one second
+  #     Sys.sleep(1)
+  #   }
+  #   else {
+  #     # Sleep 0.1 Seconds
+  #     Sys.sleep(0.1)
+  #   }
 
 
 
@@ -152,7 +153,7 @@ CPE_Shodan_Create_Empty_DF <- function(df) {
     #
     #shodan_cpe_results <- rbind(shodan_cpe_results,cbind(cpes,))
 
-  return(empty_df)
+
 
 }
 
@@ -172,7 +173,7 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
 #########
 
   df$shodan_result <- list(nrow(df))
-  #df$shodan_total <- matrix(integer(0),nrow = nrow(df))
+  df$shodan_total <- matrix(integer(0),nrow = nrow(df))
   #df$shodan_matches <- list(nrow(df))
 
 
@@ -186,10 +187,16 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
     #df$shodan_results[i] <- GetShodanResults(df$ShodanQuery[i])
     result <- shodan_search(query=df$ShodanQuery[i])
 
-    df$shodan_result[[i]] <- result
-    #df$shodan_total[i] <- result$total
-    #if ( result$total > 0 ){ df$shodan_matches[i] <- result$matches }
-    #else                   { df$shodan_matches[i] <- list(NA)}
+    #df$shodan_result[[i]] <- result
+    df$shodan_total[[i]] <- result$total
+    if ( result$total > 0 )
+    {
+      df$shodan_matches[[i]] <- list(result$matches)
+    }
+    else
+    {
+      df$shodan_matches[[i]] <- list(NA)
+    }
 
     #res_tmp_df<-data.frame(result$total,as.data.frame(result$matches))
     #rbind(results_df, res_tmp_df)
@@ -204,7 +211,7 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
     }
     else if((i %% 100) == 0) {
       # Each 100 items sleep 5 second
-      Sys.sleep(5)
+      Sys.sleep(1)
     }
     else {
       # Sleep 0.1 Seconds

@@ -154,8 +154,23 @@ cpes_score_10 <- CPE_Create_Shodan_Query_Column(cpes_score_10)
 
 #shodan_cpe_results <- CPE_Shodan_Search(cpes, forceShodanQuery = FALSE)
 if(!exists("shodan_cpe_results", inherits = FALSE)) {
-
-  shodan_cpe_results <-  CPE_Shodan_Search(cpes)
+  shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
+  i_init <- 1
+  i_end  <- 10
+  for(i in i_init:i_end) {
+    
+    results <- shodan_search(query=df$ShodanQuery[4])
+    tmp_row <- rbind(cpes[c(i),])
+    tmp_row$shodan_results <- results$matches
+    install.packages("berryFunctions")
+    library("berryFunctions")
+    tmp_row$shodan_results <- insertRows(as.data.frame(results$matches), 1)
+    #<- data.table(results)
+    
+    shodan_cpe_results
+    insertRows(df, r, new = NA)
+  }
+  # Old code:  shodan_cpe_results <-  CPE_Shodan_Search(cpes, i_init = 1, i_end = 10)
   
 }
 if(!exists("shodan_cpe_results_score_10", inherits = FALSE)) {
