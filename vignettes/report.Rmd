@@ -103,8 +103,8 @@ De esta forma, para nuestro caso y por simplificar las busquedas que se realizar
 
 
 ```{r cpe_functions, error=TRUE}
-cpes <- ExtractCPE(cves)
-cpes_score_10 <- ExtractCPE(cves_score_10)
+cpes <- ExtractCPE2(cves)
+cpes_score_10 <- ExtractCPE2(cves_score_10)
 
 # Filtra: CPE part: 
 # filtra según el tag "part component"  h = hardware part|o = operating system part|a = application part
@@ -152,7 +152,7 @@ Ejemplo: juniper+junos+14.1x52
 cpes <- CPE_Create_Shodan_Query_Column(cpes)
 cpes_score_10 <- CPE_Create_Shodan_Query_Column(cpes_score_10)
 
-#shodan_cpe_results <- CPE_Shodan_Search(cpes, forceShodanQuery = FALSE)
+shodan_cpe_results <- CPE_Shodan_Search(cpes)
 if(!exists("shodan_cpe_results", inherits = FALSE)) {
   shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
   i_init <- 1
