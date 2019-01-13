@@ -191,12 +191,63 @@ ExtractCPE <- function(cve_df){
 
 }
 
+
+ExtractCPE2 <- function(cve_df){
+  cve_id_col <- cve_df[ , +which(names(cve_df) %in% c("cve.id"))]
+  cpe_column <- lapply(cve_df$vulnerable.configuration, jsonlite::fromJSON)
+
+  cpe_regex <- "cpe:([0-9]\\.[0-9]+?):([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):"
+  cpes_parsed <- str_match( cpe_column, cpe_regex)
+  cpe_df <-  as.data.frame(cbind(cve_id_col, cpes_parsed))
+  colnames(cpe_df) <- c('cve.id', 'cpe23Uri','CPE_version', 'Part_Component', 'Vendor_Component', 'Product_Component', 'Version_Component', 'Edition_Component', 'Language_Component', 'Abbreviations')
+
+  return(cpe_df)
+}
+
 FilterCPEsByPartComponent <- function(df, regex) {
 
   # Filtra CPES PArt Component with regex expresion
   filtered_cpes <- df[str_detect(df$Part_Component, regex),]
 
   return(filtered_cpes)
+}
+
+
+PlotCPEssByVendor <- function(df) {
+
+  library(ggplot2)
+  library(dplyr)
+
+  #ggplot(data.frame(df), aes(x=factor(df$Product_Component),fill=factor(df$Vendor_Component)))  +
+  #   geom_bar() +
+  #   coord_flip() +
+  #   xlab("xlabel") +
+  #   ggtitle(paste0("Vulnerabilidades según Vendor_Component")) +
+  #   theme(
+  #     legend.title=element_blank(),
+  #     legend.position=c(.90,.1)
+  #   )
+  #
+  #
+  #
+
+
+     ggplot(df, aes(x=df$Vendor_Component)) +
+       geom_bar() +
+       coord_flip()
+
+     #top_n(cpes, n=3, cpes$Vendor_Component)
+
+     #vendor <- cpes %>% arrange(desc(cpes$Vendor_Component))
+
+      # ggplot(., aes(x=type, y=freq))+
+      # geom_bar(stat='identity')
+
+  #
+  #
+  #
+  #     geom_bar(stat="count")
+
 }
 
 ####################################################

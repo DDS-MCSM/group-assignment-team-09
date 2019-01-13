@@ -88,10 +88,10 @@ GetShodanResults <- function(query_text){
   #product="junos"
   #version="14.1x53"
 
+
   # Set query
   result <- shodan_search(query=query_text)
 
-  print(paste("Num of results: ", result$total))
 
   #if (result$total > 0) {
   #  df_res <- result$matches
@@ -104,15 +104,82 @@ GetShodanResults <- function(query_text){
   return(result)
 }
 
-CPE_Shodan_Search <- function(df){
+CPE_Shodan_Create_Empty_DF <- function(df) {
 
-  df$shodan_result <- list(nrow(df))
+  empty_df <- data.frame(matrix(ncol = ncol(df), nrow = 0))  # nrow = nrow(df)
+  colnames(empty_df) <- colnames(df)
+  empty_df$shodan_result <- list()
+
+  return(empty_df)
+
+
+  # #shodan_cpe_results <-  CPE_Shodan_Create_Empty_DF(cpes)
+  # shodan_cpe_results <- data.frame()
+  # ##shodan_cpe_results <-  CPE_Shodan_Search(cpes)
+  # #init <- 1
+  # #for(i in 1:nrow(cpes)) {
+  # for(i in 1:nrow(cpes)) {
+  #   #i <- 1
+  #   shodanresults <- GetShodanResults(cpes$ShodanQuery[i])
+  #
+  #   row_shodan <- cbind(cpes[i,], shodanresults)
+  #   shodan_cpe_results <- rbind(shodan_cpe_results, row_shodan)
+  #
+  #
+  #
+  #   if((i %% 10) == 0) {
+  #     # Each 10 items sleep one second
+  #     Sys.sleep(1)
+  #   }
+  #   else {
+  #     # Sleep 0.1 Seconds
+  #     Sys.sleep(0.1)
+  #   }
+
+
+
+    #test$ShodanResultTotal <- shodanresults$total
+    #
+    #test$ShodanResultMatches <- shodanresults$matches
+    #
+    #test$ShodanResult = shodanresults
+    #
+    #
+    #test2 <- cbind(test, list(shodanresults$matches))
+    #
+    #
+    #test$matches <- list(shodanresults$matches)
+    #test <- cbind(cpes[i,],shodanresults$total,shodanresults$matches)
+    #
+    #shodan_cpe_results <- rbind(shodan_cpe_results,cbind(cpes,))
+
+
+
+}
+
+CPE_Shodan_Search <- function(df, i_init, i_end){
+
+  #####
+  #####
+
+#num_cpes <- nrow(cpes)
+#shodan_cpe_results <- cpes[0,]
+#for(i in 1:nrow(cpes))
+#for(i in 1:10) {
+#  shodan_cpe_results[c(i),] <-  CPE_Shodan_Search(cpes[c(i),])
+#}
+#shodan_cpe_results <- CPE_Shodan_Search(cpes)
+#########
+#########
+
+  #df$shodan_result <- list(nrow(df))
   #df$shodan_total <- matrix(integer(0),nrow = nrow(df))
   #df$shodan_matches <- list(nrow(df))
 
 
 
-  for(i in 1:nrow(df)) {
+
+  for(i in i_init:nrow(df)) {
     # Debug
     print(paste("Query:", i, df$ShodanQuery[i]))
 
@@ -120,10 +187,16 @@ CPE_Shodan_Search <- function(df){
     #df$shodan_results[i] <- GetShodanResults(df$ShodanQuery[i])
     result <- shodan_search(query=df$ShodanQuery[i])
 
-    df$shodan_result[[i]] <- result
-    #df$shodan_total[i] <- result$total
-    #if ( result$total > 0 ){ df$shodan_matches[i] <- result$matches }
-    #else                   { df$shodan_matches[i] <- list(NA)}
+    #df$shodan_result[[i]] <- result
+    df$shodan_total[[i]] <- result$total
+    if ( result$total > 0 )
+    {
+      df$shodan_matches[[i]] <- list(result$matches)
+    }
+    else
+    {
+      df$shodan_matches[[i]] <- list(NA)
+    }
 
     #res_tmp_df<-data.frame(result$total,as.data.frame(result$matches))
     #rbind(results_df, res_tmp_df)
@@ -132,8 +205,22 @@ CPE_Shodan_Search <- function(df){
     #if ( result$total > 0 ){ df$shodan_matches[i] <- result$matches }
     #else                   { df$shodan_matches[i] <- NA}
 
-    # Sleep 0.01 Seconds
-    Sys.sleep(0.01)
+    if((i %% 10) == 0) {
+      # Each 10 items sleep one second
+      Sys.sleep(1)
+    }
+    else if((i %% 100) == 0) {
+      # Each 100 items sleep 5 second
+      Sys.sleep(1)
+    }
+    else {
+      # Sleep 0.1 Seconds
+      Sys.sleep(0.3)
+    }
+
+    if ( i >= i_end ) {
+      break
+    }
 
     # Debug results
     #suppressMessages(suppressWarnings( print(df$shodan_results[i]) ))
@@ -147,6 +234,38 @@ CPE_Shodan_Search <- function(df){
   return(df)
 }
 
+# Funcion corregida por de Humbert
+CPE_Shodan_Search1 <- function(df) {
+  #set.seed(666)
+  #df <- df[sample(1:nrow(df), 15), ]
+
+
+  df <- apply(df, 1,
+              function(x){
+                # Sleep
+                Sys.sleep(1.1)
+
+                # Shodan query
+                print(paste("Query:", x["ShodanQuery"]))
+                result <- shodan::shodan_search(query = x["ShodanQuery"])
+                print(paste("Num of results: ", result$total))
+                if (result$total > 0) {
+                  cpe.ips <- result$matches
+                  location <- cpe.ips$location
+                  cpe.ips <- cpe.ips[,!(sapply(cpe.ips[1,], class) %in% c("list", "data.frame"))]
+                  cpe.ips$cpe23Uri <- rep(x = x["cpe23Uri"], nrow(cpe.ips))
+                  cpe.ips <- dplyr::bind_cols(cpe.ips, location)
+                  cpe.ips <- dplyr::left_join(as.data.frame(t(x)), cpe.ips, by = "cpe23Uri")
+                  cpe.ips
+                } else {
+                  NA
+                }
+
+              })
+  df <- df[!is.na(df)]
+  df <- dplyr::bind_rows(df)
+  return(df)
+}
 
 ### Representar informacion de Shodan en Mapa
 
