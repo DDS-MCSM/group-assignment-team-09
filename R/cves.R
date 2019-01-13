@@ -183,18 +183,33 @@ ExtractCPE <- function(cve_df){
 
 
   cpe_df <-  as.data.frame(cbind(cve_id_col,cpe_column,cpes_parsed))
+  cpe_df2 <-  as.data.frame(cbind(cve_id_col, cpes_parsed))
 
 
   colnames(cpe_df) <- c('cve.id', 'vulnerable.configuration', 'cpe23Uri','CPE_version', 'Part_Component', 'Vendor_Component', 'Product_Component', 'Version_Component', 'Edition_Component', 'Language_Component', 'Abbreviations')
+  colnames(cpe_df2) <- c('cve.id', 'cpe23Uri','CPE_version', 'Part_Component', 'Vendor_Component', 'Product_Component', 'Version_Component', 'Edition_Component', 'Language_Component', 'Abbreviations')
 
   return(cpe_df)
 
 }
 
+ExtractCPE2 <- function(cve_df){
+  cve_id_col <- cve_df[ , +which(names(cve_df) %in% c("cve.id"))]
+  cpe_column <- lapply(cve_df$vulnerable.configuration, jsonlite::fromJSON)
+
+  cpe_regex <- "cpe:([0-9]\\.[0-9]+?):([a-z]):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):"
+  cpes_parsed <- stringr::str_match( cpe_column, cpe_regex)
+  cpe_df <-  as.data.frame(cbind(cve_id_col, cpes_parsed), stringsAsFactors = FALSE)
+  colnames(cpe_df) <- c('cve.id', 'cpe23Uri','CPE_version', 'Part_Component', 'Vendor_Component', 'Product_Component', 'Version_Component', 'Edition_Component', 'Language_Component', 'Abbreviations')
+
+  return(cpe_df)
+}
+
+
 FilterCPEsByPartComponent <- function(df, regex) {
 
   # Filtra CPES PArt Component with regex expresion
-  filtered_cpes <- df[str_detect(df$Part_Component, regex),]
+  filtered_cpes <- df[stringr::str_detect(df$Part_Component, regex),]
 
   return(filtered_cpes)
 }
