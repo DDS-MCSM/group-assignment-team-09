@@ -88,10 +88,10 @@ GetShodanResults <- function(query_text){
   #product="junos"
   #version="14.1x53"
 
+
   # Set query
   result <- shodan_search(query=query_text)
 
-  print(paste("Num of results: ", result$total))
 
   #if (result$total > 0) {
   #  df_res <- result$matches
@@ -172,8 +172,8 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
 #########
 #########
 
-  df$shodan_result <- list(nrow(df))
-  df$shodan_total <- matrix(integer(0),nrow = nrow(df))
+  #df$shodan_result <- list(nrow(df))
+  #df$shodan_total <- matrix(integer(0),nrow = nrow(df))
   #df$shodan_matches <- list(nrow(df))
 
 
@@ -234,6 +234,38 @@ CPE_Shodan_Search <- function(df, i_init, i_end){
   return(df)
 }
 
+# Funcion corregida por de Humbert
+CPE_Shodan_Search1 <- function(df) {
+  #set.seed(666)
+  #df <- df[sample(1:nrow(df), 15), ]
+
+
+  df <- apply(df, 1,
+              function(x){
+                # Sleep
+                Sys.sleep(1.2)
+
+                # Shodan query
+                print(paste("Query:", x["ShodanQuery"]))
+                result <- shodan::shodan_search(query = x["ShodanQuery"])
+                print(paste("Num of results: ", result$total))
+                if (result$total > 0) {
+                  cpe.ips <- result$matches
+                  location <- cpe.ips$location
+                  cpe.ips <- cpe.ips[,!(sapply(cpe.ips[1,], class) %in% c("list", "data.frame"))]
+                  cpe.ips$cpe23Uri <- rep(x = x["cpe23Uri"], nrow(cpe.ips))
+                  cpe.ips <- dplyr::bind_cols(cpe.ips, location)
+                  cpe.ips <- dplyr::left_join(as.data.frame(t(x)), cpe.ips, by = "cpe23Uri")
+                  cpe.ips
+                } else {
+                  NA
+                }
+
+              })
+  df <- df[!is.na(df)]
+  df <- dplyr::bind_rows(df)
+  return(df)
+}
 
 ### Representar informacion de Shodan en Mapa
 
