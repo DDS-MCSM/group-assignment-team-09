@@ -163,13 +163,15 @@ CPE_Shodan_Search1 <- function(df) {
   set.seed(668)
   df <- df[sample(1:nrow(df), 5), ]
 
+  cpesnames <- names(df)
   ctrl <- 0
   df <- apply(df, 1,
                function(x){
+                 names(x) <- cpesnames
                  # Sleep control
                  ctrl <- ctrl + 1
                  if ((ctrl %% 10) == 0) {
-                   Sys.sleep(1)
+                   Sys.sleep(1.1)
                  } else {
                    Sys.sleep(0.3)
                  }
@@ -181,6 +183,7 @@ CPE_Shodan_Search1 <- function(df) {
                    cpe.ips <- cpe.ips[,!(sapply(cpe.ips[1,], class) %in% c("list", "data.frame"))]
                    cpe.ips$cpe23Uri <- rep(x = x["cpe23Uri"], nrow(cpe.ips))
                    cpe.ips <- dplyr::bind_cols(cpe.ips, location)
+                   cpe.ips <- dplyr::left_join(as.data.frame(t(x)), cpe.ips, by = "cpe23Uri")
                    cpe.ips
                  } else {
                    NA
