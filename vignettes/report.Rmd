@@ -159,16 +159,16 @@ if(!exists("shodan_cpe_results", inherits = FALSE)) {
   i_end  <- 10
   for(i in i_init:i_end) {
     
+    ### Test con i = 4 ####
     results <- shodan_search(query=df$ShodanQuery[4])
-    tmp_row <- rbind(cpes[c(i),])
-    tmp_row$shodan_results <- results$matches
-    install.packages("berryFunctions")
-    library("berryFunctions")
-    tmp_row$shodan_results <- insertRows(as.data.frame(results$matches), 1)
-    #<- data.table(results)
+    tmp_row <- rbind(cpes[c(4),])
+    tmp_row$shodan_results <- results
+
+    # Agrega fila al data frame final
+    shodan_cpe_results <- rbind(tmp_row)
     
-    shodan_cpe_results
-    insertRows(df, r, new = NA)
+    
+
   }
   # Old code:  shodan_cpe_results <-  CPE_Shodan_Search(cpes, i_init = 1, i_end = 10)
   
